@@ -10,5 +10,6 @@ class ParkingRecord(Base):
     location = Column(String(100), nullable = False)
     status = Column(Enum("vacant", "occupied"), nullable = False, default = "vacant")
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable = True)
+    claim_code = Column(String(20), unique = True, nullable = False)
     current_rate = Column(Numeric(10, 2), nullable = False)
     last_updated = Column(DateTime, server_default = func.now(), onupdate = func.now())
