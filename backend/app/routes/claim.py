@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.auth import get_current_user
 from app.models.parking import ParkingRecord
 from app.models.history import ParkingHistory
 from app.models.users import User
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/parking", tags=["Parking Claims"])
 claim_tokens = {}
 
 @router.post("/{parking_id}/claim/initiate")
-def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = Depends(get_db)):
+def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     parking = db.query(ParkingRecord).filter(ParkingRecord.parking_id == parking_id).first()
     if parking is None:
         raise HTTPException(
@@ -53,12 +54,12 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
             detail = "No active parking session found"
         )
 
-    user = db.query(User).filter(User.user_id == claim.user_id).first()
+    '''user = db.query(User).filter(User.user_id == claim.user_id).first()
     if user is None:
         raise HTTPException(
             status_code = 404,
             detail = "User not found"
-    )
+    )'''
 
     current_time = datetime.now()
     claim_window = timedelta(minutes = 5)
@@ -69,7 +70,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
         )
 
     existing_claim = db.query(ParkingHistory).filter(
-            ParkingHistory.user_id == claim.user_id,
+            ParkingHistory.user_id == current_user.user_id,
             ParkingHistory.time_left.is_(None)
         ).first()
     
@@ -84,7 +85,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
 
     claim_tokens[token] = {
         "parking_id": parking_id,
-        "user_id": claim.user_id,
+        "user_id": current_user.user_id,
         "expires_at": expires_at
     }
 
@@ -95,7 +96,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
     }
 
 @router.post("/{parking_id}/claim/confirm")
-def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Session = Depends(get_db)):
+def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     token_data = claim_tokens.get(claim.claim_token)
     if token_data is None:
         raise HTTPException(
@@ -109,7 +110,7 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
             detail = "Claim token does not belong to this parking space"
         )
 
-    if token_data["user_id"] != claim.user_id:
+    if token_data["user_id"] != current_user.user_id:
         raise HTTPException(
             status_code = 403,
             detail = "Claim token does not belong to this user"
@@ -159,12 +160,12 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
             detail = "No active parking session found"
         )
 
-    user = db.query(User).filter(User.user_id == claim.user_id).first()
+    '''user = db.query(User).filter(User.user_id == claim.user_id).first()
     if user is None:
         raise HTTPException(
             status_code = 404,
             detail = "User not found"
-    )
+    )'''
 
     current_time = datetime.now()
     claim_window = timedelta(minutes = 5)
@@ -175,7 +176,7 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
         )
 
     existing_claim = db.query(ParkingHistory).filter(
-        ParkingHistory.user_id == claim.user_id,
+        ParkingHistory.user_id == current_user.user_id,
         ParkingHistory.time_left.is_(None)
     ).first()
 
@@ -185,8 +186,8 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
             detail = "You already have an active parking claim"
         )
     
-    parking.user_id = claim.user_id
-    history.user_id = claim.user_id
+    parking.user_id = current_user.user_id
+    history.user_id = current_user.user_id
     del claim_tokens[claim.claim_token]
     db.commit()
 

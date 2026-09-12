@@ -7,11 +7,14 @@ from app.models.fares import FareRule
 from app.models.history import ParkingHistory
 from app.routes.parking import router as parking_router
 from app.routes.claim import router as claim_router
+from app.routes.auth import router as auth_router
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
 app.include_router(parking_router)
 app.include_router(claim_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def root():
