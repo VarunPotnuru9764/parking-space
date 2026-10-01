@@ -13,4 +13,4 @@ class FareRule(Base):
     peak_multiplier = Column(Numeric(5, 2), nullable = False, default = 1.00)
     start_time = Column(Time, nullable = True)
     end_time = Column(Time, nullable = True)
-    active = Column(Boolean, nullable = False, default = True)
+    active = Column(Boolean, nullable = False, default = False)

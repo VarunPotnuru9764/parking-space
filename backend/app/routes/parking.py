@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.parking import ParkingRecord
 from app.models.history import ParkingHistory
-from app.schemas.parking import (
-    ParkingCreate, 
-    ParkingResponse,
-    ParkingStatusUpdate
-)
+from app.models.fare_history import FareHistory
 
+from app.schemas.parking import (ParkingCreate, ParkingResponse, ParkingStatusUpdate)
+from app.services.fare_engine import (calculate_occupancy, select_fare_rule, generate_fare_interval)
+
+from decimal import Decimal
 from datetime import datetime
 router = APIRouter(prefix="/parking", tags=["Parking"])
 
@@ -26,7 +26,6 @@ def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
         location=parking.location,
         current_rate=parking.current_rate
     )
-
     try:
         db.add(new_parking)
         db.commit()
@@ -63,10 +62,12 @@ def update_parking_status(parking_id: int, parking_update: ParkingStatusUpdate, 
             parking_id = parking.parking_id,
             user_id = parking.user_id,
             time_arrived = current_time,
-            rate_at_entry = parking.current_rate,
+            duration = 0.00,
+            average_rate = 0.00,
             fare_charged = 0.00
         )
         db.add(history)
+        parking.status = new_status
 
     # Case 3: occupied -> vacant
     elif old_status == "occupied" and new_status == "vacant":
@@ -80,13 +81,42 @@ def update_parking_status(parking_id: int, parking_update: ParkingStatusUpdate, 
                 status_code = 400,
                 detail = "No active parking session found"
             )
-        
-        history.time_left = current_time
-        duration_hours = (current_time - history.time_arrived).total_seconds()/3600
-        history.fare_charged = (duration_hours * float(history.rate_at_entry))
-        parking.user_id = None
 
-    parking.status = new_status
+        departure_time = current_time
+        occupancy = calculate_occupancy(db)
+        result = select_fare_rule(
+            occupancy_percentage = occupancy,
+            current_time = departure_time,
+            db = db
+        )
+
+        if result is not None:
+            rule = result["rule"]
+            rate = result["rate"]
+            generate_fare_interval(
+                history_id = history.history_id,
+                interval_end = departure_time,
+                rule_id = rule.rule_id,
+                rate = rate,
+                db = db
+            )
+
+        history.time_left = departure_time
+        duration_hours = (current_time - history.time_arrived).total_seconds()/3600
+        history.duration = duration_hours
+
+        fare_records = db.query(FareHistory).filter(FareHistory.history_id == history.history_id).all()
+        total_fare = sum(record.charge for record in fare_records)
+        history.fare_charged = total_fare
+
+        if duration_hours > 0:
+            history.average_rate = (total_fare / Decimal(str(duration_hours)))
+        else:
+            history.average_rate = 0.00
+        
+        parking.user_id = None
+        parking.status = new_status
+    
     parking.last_updated = current_time
     db.commit()
     return parking
