@@ -5,6 +5,7 @@ from typing import Literal
 class ParkingCreate(BaseModel):
     slot_number: str
     location: str
+    claim_code: str
     current_rate: float = Field(gt = 0)
 
 class ParkingStatusUpdate(BaseModel):

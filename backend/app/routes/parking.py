@@ -21,10 +21,18 @@ def get_parking_spaces(db: Session = Depends(get_db)):
 
 @router.post("/", response_model = ParkingResponse, status_code = 201)
 def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
+    existing_parking = db.query(ParkingRecord).filter(ParkingRecord.slot_number == parking.slot_number).first()
+    if existing_parking is not None:
+        raise HTTPException(
+            status_code = 409,
+            detail = "A parking space with this slot number already exists"
+        )
+    
     new_parking = ParkingRecord(
-        slot_number=parking.slot_number,
-        location=parking.location,
-        current_rate=parking.current_rate
+        slot_number = parking.slot_number,
+        location = parking.location,
+        claim_code = parking.claim_code,
+        current_rate = parking.current_rate
     )
     try:
         db.add(new_parking)
@@ -33,8 +41,8 @@ def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code = 409,
-            detail = "A parking space with this slot number already exists"
+            status_code = 500,
+            detail = "A database error occurred while creating the parking space"
         )
     
     return new_parking
