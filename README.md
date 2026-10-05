@@ -26,12 +26,12 @@ Run equivalent `pip install -r requirements.txt` commands from each subsection f
 ## Configuration
 A) The backend reads `.env` from its current working directory. Create `backend/.env` with:
 
-DATABASE_URL = mysql+pymysql://USER:PASSWORD@HOST:3306/DATABASE
+DATABASE_URL = mysql+pymysql://USER:PASSWORD@HOST:3306/DATABASE \n
 SECRET_KEY = replace-with-a-long-random-secret
 
 B) The detection layout synchronization module reads `detection/.env` and expects:
 
-API_URL=http://localhost:8000
+API_URL = http://localhost:8000
 
 Keep real credentials and secret keys out of version control. The backend creates its database tables at startup; the configured database must already exist and be reachable
 
