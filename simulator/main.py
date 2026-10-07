@@ -15,6 +15,7 @@ from config import (
 from parking import ParkingLot
 from scenario import get_parking_target
 from vehicle import Vehicle
+from frame_stream import FrameStream
 
 
 CAR_COLORS = (
@@ -77,6 +78,9 @@ def main():
     pygame.display.set_caption(
         "Parking Lot Simulator"
     )
+    frame_stream = FrameStream()
+    stream_url = frame_stream.start()
+    print(f"Simulator live feed: {stream_url}")
 
     clock = pygame.time.Clock()
     button_font = pygame.font.Font(None, 28)
@@ -200,8 +204,14 @@ def main():
 
         pygame.display.flip()
 
+        # Publish only rendered pixels. The detector consumes this camera-like
+        # feed and does not receive simulator reservation or vehicle state.
+        rgb_frame = pygame.surfarray.array3d(screen).transpose((1, 0, 2))
+        frame_stream.publish(rgb_frame[:, :, ::-1].copy())
+
         clock.tick(FPS)
 
+    frame_stream.stop()
     pygame.quit()
 
 
