@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 def calculate_overlap_ratio(bounding_box, parking_polygon):
+    """Return the fraction of a detected vehicle box inside a parking polygon."""
     x1, y1, x2, y2 = bounding_box
     polygon = np.array(parking_polygon, dtype = np.int32)
 
@@ -34,13 +35,13 @@ def calculate_overlap_ratio(bounding_box, parking_polygon):
         -1
     )
 
-    parking_area = cv2.countNonZero(polygon_mask)
-    if parking_area == 0:
+    vehicle_area = cv2.countNonZero(vehicle_mask)
+    if vehicle_area == 0:
         return 0.0
 
     intersection = cv2.bitwise_and(polygon_mask, vehicle_mask)
     overlap_area = cv2.countNonZero(intersection)
-    return overlap_area / parking_area
+    return overlap_area / vehicle_area
 
 def is_space_occupied(bounding_box, parking_polygon, overlap_threshold = 0.30):
     overlap_ratio = calculate_overlap_ratio(bounding_box,parking_polygon)

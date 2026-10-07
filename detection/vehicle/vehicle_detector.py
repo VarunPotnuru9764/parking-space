@@ -58,8 +58,16 @@ class VehicleDetector:
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, (0, 60, 40), (180, 255, 255))
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Occupied-space outlines and leave controls use the car's color too.
+        # Opening removes their thin borders/text while preserving the solid car.
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+        # Keep nested contours too: a car can sit inside a same-colored reserved
+        # slot outline, and RETR_EXTERNAL would return only the oversized outline.
+        contours, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         vehicles = []
+        frame_height, frame_width = frame.shape[:2]
         for contour in contours:
             area = cv2.contourArea(contour)
             if area < 500:
@@ -70,7 +78,12 @@ class VehicleDetector:
                 continue
 
             aspect_ratio = width / height
-            if aspect_ratio < 0.5 or aspect_ratio > 2.5:
+            if (
+                aspect_ratio < 1.4
+                or aspect_ratio > 2.2
+                or width > frame_width * 0.12
+                or height > frame_height * 0.10
+            ):
                 continue
 
             bounding_box = (x, y, x + width, y + height)

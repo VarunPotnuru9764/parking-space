@@ -73,7 +73,15 @@ From `simulator`:
 In powershell terminal
 python main.py
 
-The Pygame window lets you spawn cars and send parked cars to the exit. The simulator is currently standalone; its code does not itself stream frames to the detection pipeline or update the backend
+The Pygame window lets you spawn cars and send parked cars to the exit. It publishes the rendered window as an MJPEG camera feed at `http://127.0.0.1:8765/video`. The stream contains only rendered pixels; the detection process does not read simulator reservation or vehicle state
+
+## Run live detection
+Start the backend with its database configuration, then use two terminals:
+
+1) From `simulator`, run `python main.py`.
+2) From `detection`, run `python -m vehicle.run_simulator`
+
+The detector reads the simulator's live camera feed, applies confirmed occupancy changes to the backend, and displays/saves an annotated feed. Press `Q` in the detection preview to stop detection. Close the simulator window to stop the frame stream. The simulator requirements include OpenCV for encoding its rendered frames
 
 ## Current scope
 The detection scripts that synchronize layouts or occupancy require a running backend and valid API/database configuration. The simulator can be run independently

@@ -7,9 +7,13 @@ class OccupancyPipeline:
         self.layout = layout
         self.detector = VehicleDetector(mode = detector_mode)
         self.tracker = OccupancyTracker(required_confirmations = confirmation_frames)
+        self.last_detections = []
 
     def process_frame(self, frame):
         vehicles = self.detector.detect(frame)
+        # Expose the current frame's detections for visualization without changing
+        # the pipeline's return value or feeding overlay data into tracking.
+        self.last_detections = vehicles
         detected_states = {}
         for space in self.layout["spaces"]:
             slot_number = space["slot_number"]
