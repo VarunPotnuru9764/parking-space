@@ -5,7 +5,7 @@ A Python project for managing parking spaces, tracking occupancy, and calculatin
 backend/      FastAPI API, SQLAlchemy models, authentication, and fare scheduler
 detection/    Vehicle detection, occupancy tracking, parking layout tools, and API sync
 simulator/   Standalone Pygame parking lot simulation
-frontend/    Placeholder directory; no frontend files are currently present
+frontend/    React-based lot/camera parking-layout review and polygon editor
 
 ## Requirements
 - Python 3.10 or later
@@ -32,6 +32,8 @@ SECRET_KEY = replace-with-a-long-random-secret
 B) The detection layout synchronization module reads `detection/.env` and expects:
 
 API_URL = http://localhost:8000
+PARKING_LOT_SLUG = simulator
+CAMERA_ID = default
 
 Keep real credentials and secret keys out of version control. The backend creates its database tables at startup; the configured database must already exist and be reachable
 
@@ -44,28 +46,68 @@ python -m uvicorn main:app --reload
 The API listens at `http://localhost:8000`. The root endpoint returns a status message, and FastAPI's interactive documentation is available at `http://localhost:8000/docs`.
 
 The API exposes:
-- `GET /parking/` and `POST /parking/` to list and create parking spaces
-- `PUT /parking/{parking_id}` to update a space's `vacant` or `occupied` status
+- `GET /lots/` and `POST /lots/` to list and create parking lots (`name`, unique `slug`, optional location)
+- `GET /parking/?lot_id=...` and `POST /parking/` to list/create spaces within one lot; omitted lot selection preserves the legacy `simulator` default
+- `POST /parking/bulk` to idempotently add up to 1,000 spaces to one lot without modifying existing records
+- `PUT /parking/{parking_id}?lot_id=...` to update a space's `vacant` or `occupied` status within the selected lot
 - `POST /auth/register` and `POST /auth/login` for user registration and bearer-token login
 - `GET /auth/me` for the authenticated user's profile
 - `POST /parking/{parking_id}/claim/initiate` and `/confirm` for authenticated parking claims
+- `GET` and `PUT /layouts/{lot_slug}/{camera_id}` to load/save validated camera-specific layouts through the detection layout manager
 
-Fare rules and parking history are managed by backend services and the scheduler. The scheduler records fare intervals at 15-minute boundaries while the API process is running
+Fare rules, occupancy percentages, current rates and active parking histories are scoped by lot. The scheduler processes each lot independently and records fare intervals at 15-minute boundaries while the API process is running. Claims are associated with the lot of their parking record; the same user may hold one active claim per lot.
+
+### Multi-lot MySQL migration (manual, required)
+
+The application does not alter existing MySQL columns automatically. Before deploying this code, stop the API and take a verified database backup. Then:
+
+1. Inspect `SHOW INDEX FROM parking_records;` and note the name of the existing single-column unique index on `slot_number`.
+2. Open `backend/migrations/001_multilot_mysql.sql`. Replace the placeholder instruction with `ALTER TABLE parking_records DROP INDEX <that_index_name>;` before adding the composite `(lot_id, slot_number)` unique key. Do not drop the unique `claim_code` index.
+3. Run the migration once against the configured database. It creates the `Simulator` lot and assigns all existing spaces, fare rules, parking history and fare-history rows to it, retaining their record IDs and values. The migration is one-time and contains `ALTER TABLE` statements; do not rerun it.
+4. Verify row counts and foreign keys, and confirm every existing `parking_records`, `parking_history`, `fare_history` and `fare_rules` row has `lot_id` set to the Simulator lot. Investigate any orphaned history rows before migration; do not delete them to make the migration pass. Only then restart the API.
+5. Create each real-world lot through `POST /lots/` or `/docs`. Use a stable slug such as `campus-west`. Keep the simulator records in the Simulator lot.
+6. Create a reviewed layout JSON for each lot and camera. Run the layout workflow with `--lot campus-west --camera gate-a`; it stores to `detection/layout/layouts/campus-west/gate-a.json`. Existing `detection/layout/parking_layout.json` remains the simulator fallback and is never overwritten by those lot/camera saves.
+7. Configure `PARKING_LOT_SLUG` and `CAMERA_ID` in `detection/.env`, then run `python test_pipeline.py --lot campus-west --camera gate-a` to sync only that lot and apply occupancy changes. The bulk sync adds missing slots and leaves existing statuses, rates and claim codes unchanged. Layouts should use unique slot names within that lot; the same slot label may be reused in another lot.
+
+For a lot with about 300 spaces, `POST /parking/bulk` creates missing rows in one request. The sync path assigns new claim codes on the server; save the generated codes printed by the sync to a secure provisioning record and assign them to the appropriate physical bays before enabling user claims. Add fare-rule rows for each real lot with that lot's `lot_id`; rules are selected by lot, and a lot without matching rules accrues no fare intervals. Do not bulk import the real lot into the Simulator slug.
 
 ## Detection and layout tools
 The `detection` package includes YOLO vehicle detection, a color-based simulator detector, occupancy tracking, parking-layout detection/review, and synchronization with the backend API. The default occupancy pipeline mode is `simulator`; the YOLO detector loads `yolo11n.pt` by default
 
+### Pretrained parking-space extraction
+
+`detection/test_layout.py` can run a pretrained Ultralytics detector whose classes represent parking spaces (for example, the published [parking-lot-yolo26m checkpoint](https://huggingface.co/simahanyan/parking-lot-yolo26m), which predicts `space-empty` and `space-occupied`). This detects parking-space regions rather than cars. It returns rectangular boxes, so the resulting four-point polygons approximate bay extents; it does not segment painted boundary lines. Review every candidate before saving.
+
+Download the checkpoint from the model page to a local `.pt` file, then from `detection` run:
+
+```powershell
+python test_layout.py --image parking_layout.png --model-weights path\to\parking_lot.pt
+```
+
+The interactive review accepts candidate IDs and asks for slot names. It saves through `layout/layout_manager.py` to the selected lot/camera layout under `layout/layouts/`. Add `--sync` to invoke the existing API/database synchronization after review; this requires `detection/.env` and a running configured backend. Without `--model-weights`, the existing contour detector remains available for simple rendered layouts. The detector dependency is already in `detection/requirements.txt` (`ultralytics`); inference also needs the checkpoint and compatible PyTorch runtime. CUDA is optional.
+
+The supplied `parking_layout.png` and simulator MP4s are synthetic rendered views, not camera footage. Parking-space checkpoints are generally trained on real aerial or surround-view imagery, so predictions on this simulator art are out of distribution and should not be treated as validated. The pretrained checkpoint was not run as part of this change because it is not present locally; use the review step on representative camera footage and verify polygons before saving or syncing. The existing saved layout remains usable directly by the occupancy pipeline, which continues to consume the same `spaces`/`polygon` schema.
+
 The existing example/test scripts use local image files and/or contact the backend. For example, from `detection` with the backend running and `.env` configured:
 
 A) In powershell terminal
-python test_layout.py
+python test_layout.py --lot campus-west --camera gate-a --export-review
 
-This script runs parking-space candidate detection on `parking_layout.png`, displays the detected candidates, and provides an interactive review process where the user selects and names the valid parking spaces. It then saves the reviewed layout to `layout/parking_layout.json` and synchronizes the detected spaces with the parking-space records through the API. This script is a manual example for validating the layout detection and synchronization workflow, not a configured automated test suite
+This detects candidates from `parking_layout.png` and writes a timestamped review bundle under `detection/layout/review_sessions/`. Use `--image path\to\frame.png` for another source image. The bundle preserves the original detector candidate IDs and polygons for import into the React editor.
 
-B) In powershell terminal
+B) From `frontend`, install and start the editor:
+
+```powershell
+npm install
+npm run dev
+```
+
+Open the Vite URL, choose the same original image and import the JSON review bundle. The editor supports drawing missed spaces, removing detections, renaming slots, dragging polygon vertices, and undo/redo. Enter the lot slug and camera ID, then save. The backend validates and writes the existing `{"spaces":[{"slot_number":"...","polygon":[[x,y], ...]}]}` schema via `layout_manager.save_layout`, into a separate `detection/layout/layouts/<lot>/<camera>.json` file. Start the backend first; its development CORS policy allows the local Vite origins.
+
+C) In powershell terminal
 python test_pipeline.py
 
-This script loads `parking_layout_v1.png` and the saved `layout/parking_layout.json`, synchronizes slots with the API, then applies confirmed occupancy changes. `test_layout.py` runs parking-space candidate detection and interactive layout review using `parking_layout.png`; it also synchronizes the resulting layout with the API. These scripts are manual examples, not a configured automated test suite
+This script loads the selected lot/camera layout, synchronizes only that lot, then applies confirmed occupancy changes. Set `PARKING_LOT_SLUG` and `CAMERA_ID` in `detection/.env`, or pass `--lot` and `--camera` explicitly. These scripts are manual workflow examples, not a configured automated test suite.
 
 ## Run the simulator
 From `simulator`:
@@ -82,6 +124,18 @@ Start the backend with its database configuration, then use two terminals:
 2) From `detection`, run `python -m vehicle.run_simulator`
 
 The detector reads the simulator's live camera feed, applies confirmed occupancy changes to the backend, and displays/saves an annotated feed. Press `Q` in the detection preview to stop detection. Close the simulator window to stop the frame stream. The simulator requirements include OpenCV for encoding its rendered frames
+
+### Run real-world video detection
+
+The real-world workflow plays the video in `detection` at its recorded frame rate, runs the existing pretrained YOLO vehicle detector, draws occupancy against the reviewed camera polygons, and sends only confirmed status changes to the selected lot. It uses `detection/layout/layouts/<lot>/<camera>.json` and the same API synchronization/updater path as the simulator. From `detection` (with the backend running and `detection/.env` configured), run:
+
+```powershell
+python -m vehicle.run_irl --lot campus-west --camera gate-a
+```
+
+The default input is `12125602_30fps.mp4`, the camera layout reference image is `parking_layout_v2.png`, and the pretrained vehicle weights are `models/yolo11n.pt`. The runner resizes layout coordinates from the reference image to the video frame size, synchronizes only the selected lot, previews detections, and writes an annotated recording to a timestamped file under `detection/output/`. Press `Q` to stop early. It refuses to overwrite an existing output file.
+
+Use `--video path\to\another_video.mp4`, `--reference-image path\to\layout_frame.png`, or `--model-weights path\to\weights.pt` to change inputs. Use `--no-sync` for a local preview that does not contact or update the backend, and `--no-preview` to process without opening a GUI window. Detection uses the available vehicle checkpoint and checks vehicle-box overlap with the manually reviewed bay polygons; it does not infer bay occupancy from markings alone. Accurate results depend on matching the chosen camera layout and reference image to the video view. This video runner processes the file once rather than exposing a network camera URL; an actual IP camera can be added later as another `VideoCapture` source.
 
 ## Current scope
 The detection scripts that synchronize layouts or occupancy require a running backend and valid API/database configuration. The simulator can be run independently

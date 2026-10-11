@@ -1,7 +1,8 @@
 from api.parking_api import ParkingAPI
 class OccupancyUpdater:
-    def __init__(self, synchronized_spaces):
+    def __init__(self, synchronized_spaces, lot_id=None):
         self.api = ParkingAPI()
+        self.lot_id = lot_id
         self.parking_ids = {
             space["slot_number"]: space["parking_id"]
             for space in synchronized_spaces
@@ -23,5 +24,6 @@ class OccupancyUpdater:
 
             self.api.update_parking_status(
                 parking_id = parking_id,
-                status = status
+                status = status,
+                lot_id = self.lot_id,
             )

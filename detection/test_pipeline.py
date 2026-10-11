@@ -1,4 +1,7 @@
 import cv2
+import argparse
+from dotenv import dotenv_values
+from pathlib import Path
 from layout.layout_manager import load_layout
 from layout.layout_sync import synchronize_layout
 from vehicle.occupancy_pipeline import OccupancyPipeline
@@ -6,12 +9,17 @@ from api.occupancy_updater import OccupancyUpdater
 
 IMAGE_PATH = "parking_layout_v1.png"
 def main():
+    config = dotenv_values(Path(__file__).resolve().parent / ".env")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--lot", default=config.get("PARKING_LOT_SLUG", "simulator"))
+    parser.add_argument("--camera", default=config.get("CAMERA_ID", "default"))
+    args = parser.parse_args()
     image = cv2.imread(IMAGE_PATH)
     if image is None:
         raise ValueError(f"Could not load image: {IMAGE_PATH}")
 
-    layout = load_layout()
-    sync_result = synchronize_layout(layout)
+    layout = load_layout(args.lot, args.camera)
+    sync_result = synchronize_layout(layout, lot_slug=args.lot)
     synchronized_spaces = sync_result["spaces"]
 
     for space in synchronized_spaces:
@@ -26,7 +34,7 @@ def main():
         confirmation_frames = 3
     )
 
-    updater = OccupancyUpdater(synchronized_spaces)
+    updater = OccupancyUpdater(synchronized_spaces, lot_id=sync_result["lot_id"])
 
     print("\n========== Occupancy Pipeline Test ==========")
 

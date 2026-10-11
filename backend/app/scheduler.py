@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from app.database import SessionLocal
 from app.models.history import ParkingHistory
+from app.models.lots import ParkingLot
 from app.services.fare_engine import (
     calculate_occupancy,
     select_fare_rule,
@@ -22,40 +23,44 @@ def get_next_boundary():
 def process_fare_intervals(boundary_time: datetime):
     db = SessionLocal()
     try:
-        occupancy = calculate_occupancy(db)
-        result = select_fare_rule(
-            occupancy_percentage = occupancy,
-            current_time = boundary_time,
-            db = db
-        )
-        if result is None:
-            print("No matching fare rule found")
-            return
-
-        rule = result["rule"]
-        rate = result["rate"]
-        print(
-            f"[Scheduler] {boundary_time} | "
-            f"Occupancy: {occupancy:.2f}% | "
-            f"Rule: {rule.rule_name} | "
-            f"Rate: ₹{rate:.2f}/hour"
-        )
-        active_histories = db.query(ParkingHistory).filter(ParkingHistory.time_left.is_(None)).all()
-        for history in active_histories:
-            fare_record = generate_fare_interval(
-                history_id = history.history_id,
-                interval_end = boundary_time,
-                rule_id = rule.rule_id,
-                rate = rate,
-                db = db
+        for lot in db.query(ParkingLot).order_by(ParkingLot.lot_id).all():
+            occupancy = calculate_occupancy(db, lot.lot_id)
+            result = select_fare_rule(
+                occupancy_percentage=occupancy,
+                current_time=boundary_time,
+                lot_id=lot.lot_id,
+                db=db,
             )
-            if fare_record is not None:
-                print(
-                    f"[Scheduler] History {history.history_id}: "
-                    f"{fare_record.interval_start} → "
-                    f"{fare_record.interval_end} | "
-                    f"₹{fare_record.charge:.2f}"
+            if result is None:
+                print(f"[Scheduler] No matching fare rule for lot {lot.slug}")
+                continue
+
+            rule = result["rule"]
+            rate = result["rate"]
+            print(
+                f"[Scheduler] Lot {lot.slug} | {boundary_time} | "
+                f"Occupancy: {occupancy:.2f}% | Rule: {rule.rule_name} | "
+                f"Rate: ₹{rate:.2f}/hour"
+            )
+            active_histories = db.query(ParkingHistory).filter(
+                ParkingHistory.lot_id == lot.lot_id,
+                ParkingHistory.time_left.is_(None),
+            ).all()
+            for history in active_histories:
+                fare_record = generate_fare_interval(
+                    history_id=history.history_id,
+                    interval_end=boundary_time,
+                    rule_id=rule.rule_id,
+                    rate=rate,
+                    lot_id=lot.lot_id,
+                    db=db,
                 )
+                if fare_record is not None:
+                    print(
+                        f"[Scheduler] Lot {lot.slug}, history {history.history_id}: "
+                        f"{fare_record.interval_start} → {fare_record.interval_end} | "
+                        f"₹{fare_record.charge:.2f}"
+                    )
 
     except Exception as e:
         db.rollback()

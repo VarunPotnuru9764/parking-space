@@ -5,6 +5,7 @@ class ParkingHistory(Base):
     __tablename__ = "parking_history"
 
     history_id = Column(Integer, primary_key = True, index = True, autoincrement = True)
+    lot_id = Column(Integer, ForeignKey("parking_lots.lot_id"), nullable=False, index=True)
     parking_id = Column(Integer, ForeignKey("parking_records.parking_id"), nullable = False)
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable = True)
     time_arrived = Column(DateTime, nullable = False)

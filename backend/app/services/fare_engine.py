@@ -10,17 +10,21 @@ from app.models.fare_history import FareHistory
 def is_boundary_time(current_time: datetime) -> bool:
     return current_time.minute % 15 == 0 
 
-def calculate_occupancy(db: Session) -> float:
-    total_spaces = db.query(ParkingRecord).count()
+def calculate_occupancy(db: Session, lot_id: int) -> float:
+    total_spaces = db.query(ParkingRecord).filter(ParkingRecord.lot_id == lot_id).count()
     if total_spaces == 0:
         return 0.0
 
-    occupied_spaces = db.query(ParkingRecord).filter(ParkingRecord.status == "occupied").count()
+    occupied_spaces = db.query(ParkingRecord).filter(
+        ParkingRecord.lot_id == lot_id,
+        ParkingRecord.status == "occupied"
+    ).count()
     occupancy_percentage = (occupied_spaces / total_spaces) * 100
     return occupancy_percentage
 
-def select_fare_rule(occupancy_percentage: float, current_time: datetime, db: Session):
+def select_fare_rule(occupancy_percentage: float, current_time: datetime, lot_id: int, db: Session):
     rule = db.query(FareRule).filter(
+        FareRule.lot_id == lot_id,
         FareRule.min_occupancy <= occupancy_percentage,
         FareRule.max_occupancy >= occupancy_percentage
     ).first()
@@ -39,8 +43,8 @@ def select_fare_rule(occupancy_percentage: float, current_time: datetime, db: Se
         rate *= float(rule.peak_multiplier)
 
     if is_boundary_time(current_time):
-        db.query(FareRule).update({FareRule.active: False}, synchronize_session = False)
-        db.query(ParkingRecord).update({ParkingRecord.current_rate: rate}, synchronize_session = False)
+        db.query(FareRule).filter(FareRule.lot_id == lot_id).update({FareRule.active: False}, synchronize_session = False)
+        db.query(ParkingRecord).filter(ParkingRecord.lot_id == lot_id).update({ParkingRecord.current_rate: rate}, synchronize_session = False)
         rule.active = True
         db.commit()
 
@@ -50,9 +54,10 @@ def select_fare_rule(occupancy_percentage: float, current_time: datetime, db: Se
         "is_peak": is_peak
     }
 
-def record_fare_interval(history_id: int, rule_id: int, interval_start: datetime, interval_end: datetime, rate: float, db: Session):
+def record_fare_interval(history_id: int, rule_id: int, interval_start: datetime, interval_end: datetime, rate: float, lot_id: int, db: Session):
     history = db.query(ParkingHistory).filter(ParkingHistory.history_id == history_id).first()
-    if history is None:
+    rule = db.query(FareRule).filter(FareRule.rule_id == rule_id, FareRule.lot_id == lot_id).first()
+    if history is None or history.lot_id != lot_id or rule is None:
         return None
 
     if interval_end <= interval_start:
@@ -63,6 +68,7 @@ def record_fare_interval(history_id: int, rule_id: int, interval_start: datetime
     charge = duration_hours * rate_decimal
 
     fare_record = FareHistory(
+        lot_id = lot_id,
         history_id = history_id,
         rule_id = rule_id,
         interval_start = interval_start,
@@ -75,16 +81,19 @@ def record_fare_interval(history_id: int, rule_id: int, interval_start: datetime
     db.commit()
     return fare_record
 
-def generate_fare_interval(history_id: int, interval_end: datetime, rule_id: int, rate: float, db: Session):
+def generate_fare_interval(history_id: int, interval_end: datetime, rule_id: int, rate: float, lot_id: int, db: Session):
     history = db.query(ParkingHistory).filter(ParkingHistory.history_id == history_id).first()
-    if history is None:
+    if history is None or history.lot_id != lot_id:
         return None
 
     if history.time_left is not None:
         interval_end = min(interval_end, history.time_left)
 
     interval_start = history.time_arrived
-    last_fare = db.query(FareHistory).filter(FareHistory.history_id == history_id).order_by(FareHistory.interval_end.desc()).first()
+    last_fare = db.query(FareHistory).filter(
+        FareHistory.history_id == history_id,
+        FareHistory.lot_id == lot_id,
+    ).order_by(FareHistory.interval_end.desc()).first()
     if last_fare is not None:
         interval_start = last_fare.interval_end
 
@@ -97,6 +106,7 @@ def generate_fare_interval(history_id: int, interval_end: datetime, rule_id: int
         interval_start = interval_start,
         interval_end = interval_end,
         rate = rate,
+        lot_id = lot_id,
         db = db
     )
     return fare_record

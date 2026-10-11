@@ -111,7 +111,7 @@ def update_api(updater, changes):
         print(f"API update failed: {e}")
 
 def main():
-    layout = load_layout()
+    layout = load_layout("simulator", "default")
     video = cv2.VideoCapture(LIVE_FEED_URL)
     if not video.isOpened():
         raise ValueError(
@@ -143,7 +143,7 @@ def main():
     # Use video-pixel coordinates for both occupancy detection and the overlay.
     # Passing the unscaled reference-image polygons to the pipeline makes their
     # lower edges extend into the aisle and can mark passing cars as parked.
-    sync_result = synchronize_layout(video_layout)
+    sync_result = synchronize_layout(video_layout, lot_slug="simulator")
     synchronized_spaces = sync_result["spaces"]
 
     print("\nSynchronized parking spaces:")
@@ -154,7 +154,7 @@ def main():
         )
 
     pipeline = OccupancyPipeline(layout = sync_result, detector_mode = "simulator", confirmation_frames = 3)
-    updater = OccupancyUpdater(synchronized_spaces)
+    updater = OccupancyUpdater(synchronized_spaces, lot_id=sync_result["lot_id"])
     
     print("\nStarting live simulator detection...")
     print("Press Q to stop\n")

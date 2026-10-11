@@ -51,7 +51,7 @@ def name_candidates(candidates):
         used_names.add(name)
         named_candidates.append({
             "slot_number": name,
-            "polygon": candidate["polygon"].tolist()
+            "polygon": candidate["polygon"].tolist() if hasattr(candidate["polygon"], "tolist") else candidate["polygon"]
         })
 
     return named_candidates

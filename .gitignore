@@ -16,3 +16,10 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Large videos and generated outputs
+detection/*.mp4
+detection/output/
+
+# Database backups
+parking_backup.sql

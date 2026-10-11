@@ -5,6 +5,7 @@ class FareHistory(Base):
     __tablename__ = "fare_history"
 
     fare_id = Column(Integer, primary_key = True, index = True, autoincrement = True)
+    lot_id = Column(Integer, ForeignKey("parking_lots.lot_id"), nullable=False, index=True)
     history_id = Column(Integer, ForeignKey("parking_history.history_id"), nullable = False)
     rule_id = Column(Integer, ForeignKey("fare_rules.rule_id"), nullable = False)
     interval_start = Column(DateTime, nullable = False)

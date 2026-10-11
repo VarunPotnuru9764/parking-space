@@ -17,8 +17,10 @@ router = APIRouter(prefix="/parking", tags=["Parking Claims"])
 claim_tokens = {}
 
 @router.post("/{parking_id}/claim/initiate")
-def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def initiate_parking_claim(parking_id: int, claim: ParkingClaim, lot_id: int | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     parking = db.query(ParkingRecord).filter(ParkingRecord.parking_id == parking_id).first()
+    if parking is not None and lot_id is not None and parking.lot_id != lot_id:
+        parking = None
     if parking is None:
         raise HTTPException(
             status_code = 404,
@@ -71,6 +73,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
 
     existing_claim = db.query(ParkingHistory).filter(
             ParkingHistory.user_id == current_user.user_id,
+            ParkingHistory.lot_id == parking.lot_id,
             ParkingHistory.time_left.is_(None)
         ).first()
     
@@ -85,6 +88,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
 
     claim_tokens[token] = {
         "parking_id": parking_id,
+        "lot_id": parking.lot_id,
         "user_id": current_user.user_id,
         "expires_at": expires_at
     }
@@ -96,7 +100,7 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, db: Session = D
     }
 
 @router.post("/{parking_id}/claim/confirm")
-def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, lot_id: int | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     token_data = claim_tokens.get(claim.claim_token)
     if token_data is None:
         raise HTTPException(
@@ -109,6 +113,9 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
             status_code = 403,
             detail = "Claim token does not belong to this parking space"
         )
+
+    if lot_id is not None and token_data["lot_id"] != lot_id:
+        raise HTTPException(status_code=403, detail="Claim token does not belong to this parking lot")
 
     if token_data["user_id"] != current_user.user_id:
         raise HTTPException(
@@ -124,7 +131,10 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
             detail = "Claim token has expired"
         )
 
-    parking = db.query(ParkingRecord).filter(ParkingRecord.parking_id == parking_id).first()
+    parking = db.query(ParkingRecord).filter(
+        ParkingRecord.parking_id == parking_id,
+        ParkingRecord.lot_id == token_data["lot_id"]
+    ).first()
     if parking is None:
         raise HTTPException(
             status_code = 404,
@@ -177,6 +187,7 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
 
     existing_claim = db.query(ParkingHistory).filter(
         ParkingHistory.user_id == current_user.user_id,
+            ParkingHistory.lot_id == parking.lot_id,
         ParkingHistory.time_left.is_(None)
     ).first()
 
@@ -194,6 +205,7 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, db: Sessi
     return {
         "message": "Parking space claimed successfully",
         "parking_id": parking.parking_id,
+        "lot_id": parking.lot_id,
         "slot_number": parking.slot_number,
         "user_id": parking.user_id
     }

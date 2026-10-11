@@ -3,9 +3,14 @@ from vehicle.occupancy import is_space_occupied
 from vehicle.occupancy_tracker import OccupancyTracker
 
 class OccupancyPipeline:
-    def __init__(self, layout, detector_mode = "simulator", confirmation_frames = 3):
+    def __init__(self, layout, detector_mode = "simulator", confirmation_frames = 3,
+                 model_path = "yolo11n.pt", confidence_threshold = 0.5):
         self.layout = layout
-        self.detector = VehicleDetector(mode = detector_mode)
+        self.detector = VehicleDetector(
+            mode=detector_mode,
+            model_path=model_path,
+            confidence_threshold=confidence_threshold,
+        )
         self.tracker = OccupancyTracker(required_confirmations = confirmation_frames)
         self.last_detections = []
 
