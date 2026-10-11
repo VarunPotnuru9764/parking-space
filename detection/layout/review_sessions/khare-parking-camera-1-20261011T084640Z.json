@@ -1,0 +1,4786 @@
+{
+  "format": "parking-layout-review-v1",
+  "lot_slug": "khare-parking",
+  "camera_id": "camera-1",
+  "image_filename": "parking_layout_v3.png",
+  "image_width": 1803,
+  "image_height": 611,
+  "detector_candidates": [
+    {
+      "candidate_id": 1,
+      "stable_id": "detector-1",
+      "polygon": [
+        [
+          1001,
+          82
+        ],
+        [
+          1056,
+          82
+        ],
+        [
+          1056,
+          121
+        ],
+        [
+          1001,
+          121
+        ]
+      ],
+      "confidence": 0.2571636140346527,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 2,
+      "stable_id": "detector-2",
+      "polygon": [
+        [
+          416,
+          83
+        ],
+        [
+          467,
+          83
+        ],
+        [
+          467,
+          120
+        ],
+        [
+          416,
+          120
+        ]
+      ],
+      "confidence": 0.4275471270084381,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 3,
+      "stable_id": "detector-3",
+      "polygon": [
+        [
+          637,
+          83
+        ],
+        [
+          687,
+          83
+        ],
+        [
+          687,
+          118
+        ],
+        [
+          637,
+          118
+        ]
+      ],
+      "confidence": 0.3935145139694214,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 4,
+      "stable_id": "detector-4",
+      "polygon": [
+        [
+          672,
+          84
+        ],
+        [
+          724,
+          84
+        ],
+        [
+          724,
+          120
+        ],
+        [
+          672,
+          120
+        ]
+      ],
+      "confidence": 0.4277036488056183,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 5,
+      "stable_id": "detector-5",
+      "polygon": [
+        [
+          452,
+          85
+        ],
+        [
+          501,
+          85
+        ],
+        [
+          501,
+          118
+        ],
+        [
+          452,
+          118
+        ]
+      ],
+      "confidence": 0.2950366735458374,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 6,
+      "stable_id": "detector-6",
+      "polygon": [
+        [
+          916,
+          87
+        ],
+        [
+          969,
+          87
+        ],
+        [
+          969,
+          124
+        ],
+        [
+          916,
+          124
+        ]
+      ],
+      "confidence": 0.37002938985824585,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 7,
+      "stable_id": "detector-7",
+      "polygon": [
+        [
+          666,
+          89
+        ],
+        [
+          718,
+          89
+        ],
+        [
+          718,
+          123
+        ],
+        [
+          666,
+          123
+        ]
+      ],
+      "confidence": 0.43211451172828674,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 8,
+      "stable_id": "detector-8",
+      "polygon": [
+        [
+          958,
+          89
+        ],
+        [
+          1009,
+          89
+        ],
+        [
+          1009,
+          125
+        ],
+        [
+          958,
+          125
+        ]
+      ],
+      "confidence": 0.4375379979610443,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 9,
+      "stable_id": "detector-9",
+      "polygon": [
+        [
+          632,
+          91
+        ],
+        [
+          679,
+          91
+        ],
+        [
+          679,
+          125
+        ],
+        [
+          632,
+          125
+        ]
+      ],
+      "confidence": 0.2679177522659302,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 10,
+      "stable_id": "detector-10",
+      "polygon": [
+        [
+          879,
+          92
+        ],
+        [
+          928,
+          92
+        ],
+        [
+          928,
+          128
+        ],
+        [
+          879,
+          128
+        ]
+      ],
+      "confidence": 0.2901039123535156,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 11,
+      "stable_id": "detector-11",
+      "polygon": [
+        [
+          728,
+          95
+        ],
+        [
+          772,
+          95
+        ],
+        [
+          772,
+          132
+        ],
+        [
+          728,
+          132
+        ]
+      ],
+      "confidence": 0.3133132755756378,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 12,
+      "stable_id": "detector-12",
+      "polygon": [
+        [
+          526,
+          99
+        ],
+        [
+          579,
+          99
+        ],
+        [
+          579,
+          138
+        ],
+        [
+          526,
+          138
+        ]
+      ],
+      "confidence": 0.40600207448005676,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 13,
+      "stable_id": "detector-13",
+      "polygon": [
+        [
+          832,
+          100
+        ],
+        [
+          889,
+          100
+        ],
+        [
+          889,
+          142
+        ],
+        [
+          832,
+          142
+        ]
+      ],
+      "confidence": 0.36509162187576294,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 14,
+      "stable_id": "detector-14",
+      "polygon": [
+        [
+          340,
+          101
+        ],
+        [
+          393,
+          101
+        ],
+        [
+          393,
+          137
+        ],
+        [
+          340,
+          137
+        ]
+      ],
+      "confidence": 0.26432332396507263,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 15,
+      "stable_id": "detector-15",
+      "polygon": [
+        [
+          760,
+          101
+        ],
+        [
+          811,
+          101
+        ],
+        [
+          811,
+          137
+        ],
+        [
+          760,
+          137
+        ]
+      ],
+      "confidence": 0.284515917301178,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 16,
+      "stable_id": "detector-16",
+      "polygon": [
+        [
+          568,
+          102
+        ],
+        [
+          615,
+          102
+        ],
+        [
+          615,
+          138
+        ],
+        [
+          568,
+          138
+        ]
+      ],
+      "confidence": 0.5153462290763855,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 17,
+      "stable_id": "detector-17",
+      "polygon": [
+        [
+          700,
+          103
+        ],
+        [
+          748,
+          103
+        ],
+        [
+          748,
+          141
+        ],
+        [
+          700,
+          141
+        ]
+      ],
+      "confidence": 0.44157281517982483,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 18,
+      "stable_id": "detector-18",
+      "polygon": [
+        [
+          752,
+          103
+        ],
+        [
+          802,
+          103
+        ],
+        [
+          802,
+          139
+        ],
+        [
+          752,
+          139
+        ]
+      ],
+      "confidence": 0.4543065130710602,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 19,
+      "stable_id": "detector-19",
+      "polygon": [
+        [
+          481,
+          104
+        ],
+        [
+          532,
+          104
+        ],
+        [
+          532,
+          140
+        ],
+        [
+          481,
+          140
+        ]
+      ],
+      "confidence": 0.553173303604126,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 20,
+      "stable_id": "detector-20",
+      "polygon": [
+        [
+          519,
+          105
+        ],
+        [
+          564,
+          105
+        ],
+        [
+          564,
+          140
+        ],
+        [
+          519,
+          140
+        ]
+      ],
+      "confidence": 0.3751674294471741,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 21,
+      "stable_id": "detector-21",
+      "polygon": [
+        [
+          596,
+          105
+        ],
+        [
+          638,
+          105
+        ],
+        [
+          638,
+          137
+        ],
+        [
+          596,
+          137
+        ]
+      ],
+      "confidence": 0.29543185234069824,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 22,
+      "stable_id": "detector-22",
+      "polygon": [
+        [
+          1022,
+          105
+        ],
+        [
+          1069,
+          105
+        ],
+        [
+          1069,
+          140
+        ],
+        [
+          1022,
+          140
+        ]
+      ],
+      "confidence": 0.33199021220207214,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 23,
+      "stable_id": "detector-23",
+      "polygon": [
+        [
+          444,
+          107
+        ],
+        [
+          490,
+          107
+        ],
+        [
+          490,
+          141
+        ],
+        [
+          444,
+          141
+        ]
+      ],
+      "confidence": 0.43776729702949524,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 24,
+      "stable_id": "detector-24",
+      "polygon": [
+        [
+          471,
+          108
+        ],
+        [
+          514,
+          108
+        ],
+        [
+          514,
+          142
+        ],
+        [
+          471,
+          142
+        ]
+      ],
+      "confidence": 0.49712038040161133,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 25,
+      "stable_id": "detector-25",
+      "polygon": [
+        [
+          696,
+          109
+        ],
+        [
+          745,
+          109
+        ],
+        [
+          745,
+          145
+        ],
+        [
+          696,
+          145
+        ]
+      ],
+      "confidence": 0.372086763381958,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 26,
+      "stable_id": "detector-26",
+      "polygon": [
+        [
+          830,
+          109
+        ],
+        [
+          878,
+          109
+        ],
+        [
+          878,
+          144
+        ],
+        [
+          830,
+          144
+        ]
+      ],
+      "confidence": 0.28308942914009094,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 27,
+      "stable_id": "detector-27",
+      "polygon": [
+        [
+          798,
+          112
+        ],
+        [
+          847,
+          112
+        ],
+        [
+          847,
+          147
+        ],
+        [
+          798,
+          147
+        ]
+      ],
+      "confidence": 0.28078919649124146,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 28,
+      "stable_id": "detector-28",
+      "polygon": [
+        [
+          1001,
+          112
+        ],
+        [
+          1051,
+          112
+        ],
+        [
+          1051,
+          146
+        ],
+        [
+          1001,
+          146
+        ]
+      ],
+      "confidence": 0.36653801798820496,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 29,
+      "stable_id": "detector-29",
+      "polygon": [
+        [
+          418,
+          113
+        ],
+        [
+          464,
+          113
+        ],
+        [
+          464,
+          145
+        ],
+        [
+          418,
+          145
+        ]
+      ],
+      "confidence": 0.38753458857536316,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 30,
+      "stable_id": "detector-30",
+      "polygon": [
+        [
+          866,
+          113
+        ],
+        [
+          908,
+          113
+        ],
+        [
+          908,
+          146
+        ],
+        [
+          866,
+          146
+        ]
+      ],
+      "confidence": 0.26594266295433044,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 31,
+      "stable_id": "detector-31",
+      "polygon": [
+        [
+          1094,
+          114
+        ],
+        [
+          1146,
+          114
+        ],
+        [
+          1146,
+          148
+        ],
+        [
+          1094,
+          148
+        ]
+      ],
+      "confidence": 0.33875271677970886,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 32,
+      "stable_id": "detector-32",
+      "polygon": [
+        [
+          384,
+          115
+        ],
+        [
+          433,
+          115
+        ],
+        [
+          433,
+          145
+        ],
+        [
+          384,
+          145
+        ]
+      ],
+      "confidence": 0.2880019247531891,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 33,
+      "stable_id": "detector-33",
+      "polygon": [
+        [
+          662,
+          115
+        ],
+        [
+          710,
+          115
+        ],
+        [
+          710,
+          146
+        ],
+        [
+          662,
+          146
+        ]
+      ],
+      "confidence": 0.267441064119339,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 34,
+      "stable_id": "detector-34",
+      "polygon": [
+        [
+          897,
+          151
+        ],
+        [
+          944,
+          151
+        ],
+        [
+          944,
+          185
+        ],
+        [
+          897,
+          185
+        ]
+      ],
+      "confidence": 0.2685714662075043,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 35,
+      "stable_id": "detector-35",
+      "polygon": [
+        [
+          404,
+          153
+        ],
+        [
+          469,
+          153
+        ],
+        [
+          469,
+          195
+        ],
+        [
+          404,
+          195
+        ]
+      ],
+      "confidence": 0.6544535756111145,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 36,
+      "stable_id": "detector-36",
+      "polygon": [
+        [
+          766,
+          154
+        ],
+        [
+          825,
+          154
+        ],
+        [
+          825,
+          193
+        ],
+        [
+          766,
+          193
+        ]
+      ],
+      "confidence": 0.6442459225654602,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 37,
+      "stable_id": "detector-37",
+      "polygon": [
+        [
+          356,
+          155
+        ],
+        [
+          420,
+          155
+        ],
+        [
+          420,
+          196
+        ],
+        [
+          356,
+          196
+        ]
+      ],
+      "confidence": 0.7487265467643738,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 38,
+      "stable_id": "detector-38",
+      "polygon": [
+        [
+          717,
+          155
+        ],
+        [
+          781,
+          155
+        ],
+        [
+          781,
+          198
+        ],
+        [
+          717,
+          198
+        ]
+      ],
+      "confidence": 0.6309598088264465,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 39,
+      "stable_id": "detector-39",
+      "polygon": [
+        [
+          912,
+          155
+        ],
+        [
+          963,
+          155
+        ],
+        [
+          963,
+          193
+        ],
+        [
+          912,
+          193
+        ]
+      ],
+      "confidence": 0.35322272777557373,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 40,
+      "stable_id": "detector-40",
+      "polygon": [
+        [
+          517,
+          157
+        ],
+        [
+          578,
+          157
+        ],
+        [
+          578,
+          199
+        ],
+        [
+          517,
+          199
+        ]
+      ],
+      "confidence": 0.6701173186302185,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 41,
+      "stable_id": "detector-41",
+      "polygon": [
+        [
+          306,
+          158
+        ],
+        [
+          370,
+          158
+        ],
+        [
+          370,
+          201
+        ],
+        [
+          306,
+          201
+        ]
+      ],
+      "confidence": 0.5839287638664246,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 42,
+      "stable_id": "detector-42",
+      "polygon": [
+        [
+          464,
+          158
+        ],
+        [
+          526,
+          158
+        ],
+        [
+          526,
+          198
+        ],
+        [
+          464,
+          198
+        ]
+      ],
+      "confidence": 0.6510283946990967,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 43,
+      "stable_id": "detector-43",
+      "polygon": [
+        [
+          925,
+          158
+        ],
+        [
+          984,
+          158
+        ],
+        [
+          984,
+          201
+        ],
+        [
+          925,
+          201
+        ]
+      ],
+      "confidence": 0.6179121732711792,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 44,
+      "stable_id": "detector-44",
+      "polygon": [
+        [
+          1020,
+          158
+        ],
+        [
+          1080,
+          158
+        ],
+        [
+          1080,
+          197
+        ],
+        [
+          1020,
+          197
+        ]
+      ],
+      "confidence": 0.5015667676925659,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 45,
+      "stable_id": "detector-45",
+      "polygon": [
+        [
+          563,
+          160
+        ],
+        [
+          619,
+          160
+        ],
+        [
+          619,
+          199
+        ],
+        [
+          563,
+          199
+        ]
+      ],
+      "confidence": 0.725791871547699,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 46,
+      "stable_id": "detector-46",
+      "polygon": [
+        [
+          602,
+          160
+        ],
+        [
+          647,
+          160
+        ],
+        [
+          647,
+          193
+        ],
+        [
+          602,
+          193
+        ]
+      ],
+      "confidence": 0.2663917541503906,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 47,
+      "stable_id": "detector-47",
+      "polygon": [
+        [
+          1160,
+          160
+        ],
+        [
+          1219,
+          160
+        ],
+        [
+          1219,
+          198
+        ],
+        [
+          1160,
+          198
+        ]
+      ],
+      "confidence": 0.4679369330406189,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 48,
+      "stable_id": "detector-48",
+      "polygon": [
+        [
+          663,
+          161
+        ],
+        [
+          728,
+          161
+        ],
+        [
+          728,
+          202
+        ],
+        [
+          663,
+          202
+        ]
+      ],
+      "confidence": 0.7001700401306152,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 49,
+      "stable_id": "detector-49",
+      "polygon": [
+        [
+          812,
+          161
+        ],
+        [
+          872,
+          161
+        ],
+        [
+          872,
+          200
+        ],
+        [
+          812,
+          200
+        ]
+      ],
+      "confidence": 0.5886788964271545,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 50,
+      "stable_id": "detector-50",
+      "polygon": [
+        [
+          966,
+          162
+        ],
+        [
+          1024,
+          162
+        ],
+        [
+          1024,
+          203
+        ],
+        [
+          966,
+          203
+        ]
+      ],
+      "confidence": 0.6075606346130371,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 51,
+      "stable_id": "detector-51",
+      "polygon": [
+        [
+          622,
+          163
+        ],
+        [
+          681,
+          163
+        ],
+        [
+          681,
+          202
+        ],
+        [
+          622,
+          202
+        ]
+      ],
+      "confidence": 0.6482446193695068,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 52,
+      "stable_id": "detector-52",
+      "polygon": [
+        [
+          969,
+          163
+        ],
+        [
+          1030,
+          163
+        ],
+        [
+          1030,
+          205
+        ],
+        [
+          969,
+          205
+        ]
+      ],
+      "confidence": 0.33227211236953735,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 53,
+      "stable_id": "detector-53",
+      "polygon": [
+        [
+          1204,
+          163
+        ],
+        [
+          1263,
+          163
+        ],
+        [
+          1263,
+          199
+        ],
+        [
+          1204,
+          199
+        ]
+      ],
+      "confidence": 0.4655753970146179,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 54,
+      "stable_id": "detector-54",
+      "polygon": [
+        [
+          1253,
+          163
+        ],
+        [
+          1312,
+          163
+        ],
+        [
+          1312,
+          196
+        ],
+        [
+          1253,
+          196
+        ]
+      ],
+      "confidence": 0.442379355430603,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 55,
+      "stable_id": "detector-55",
+      "polygon": [
+        [
+          1063,
+          164
+        ],
+        [
+          1123,
+          164
+        ],
+        [
+          1123,
+          201
+        ],
+        [
+          1063,
+          201
+        ]
+      ],
+      "confidence": 0.36339622735977173,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 56,
+      "stable_id": "detector-56",
+      "polygon": [
+        [
+          869,
+          165
+        ],
+        [
+          929,
+          165
+        ],
+        [
+          929,
+          204
+        ],
+        [
+          869,
+          204
+        ]
+      ],
+      "confidence": 0.5787654519081116,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 57,
+      "stable_id": "detector-57",
+      "polygon": [
+        [
+          268,
+          166
+        ],
+        [
+          326,
+          166
+        ],
+        [
+          326,
+          203
+        ],
+        [
+          268,
+          203
+        ]
+      ],
+      "confidence": 0.25453630089759827,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 58,
+      "stable_id": "detector-58",
+      "polygon": [
+        [
+          1303,
+          168
+        ],
+        [
+          1350,
+          168
+        ],
+        [
+          1350,
+          200
+        ],
+        [
+          1303,
+          200
+        ]
+      ],
+      "confidence": 0.3201262056827545,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 59,
+      "stable_id": "detector-59",
+      "polygon": [
+        [
+          1620,
+          183
+        ],
+        [
+          1674,
+          183
+        ],
+        [
+          1674,
+          226
+        ],
+        [
+          1620,
+          226
+        ]
+      ],
+      "confidence": 0.2561541497707367,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 60,
+      "stable_id": "detector-60",
+      "polygon": [
+        [
+          1432,
+          186
+        ],
+        [
+          1484,
+          186
+        ],
+        [
+          1484,
+          226
+        ],
+        [
+          1432,
+          226
+        ]
+      ],
+      "confidence": 0.32686686515808105,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 61,
+      "stable_id": "detector-61",
+      "polygon": [
+        [
+          1586,
+          186
+        ],
+        [
+          1637,
+          186
+        ],
+        [
+          1637,
+          226
+        ],
+        [
+          1586,
+          226
+        ]
+      ],
+      "confidence": 0.31314617395401,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 62,
+      "stable_id": "detector-62",
+      "polygon": [
+        [
+          757,
+          187
+        ],
+        [
+          827,
+          187
+        ],
+        [
+          827,
+          236
+        ],
+        [
+          757,
+          236
+        ]
+      ],
+      "confidence": 0.6681215167045593,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 63,
+      "stable_id": "detector-63",
+      "polygon": [
+        [
+          807,
+          187
+        ],
+        [
+          873,
+          187
+        ],
+        [
+          873,
+          233
+        ],
+        [
+          807,
+          233
+        ]
+      ],
+      "confidence": 0.5616936087608337,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 64,
+      "stable_id": "detector-64",
+      "polygon": [
+        [
+          1650,
+          187
+        ],
+        [
+          1695,
+          187
+        ],
+        [
+          1695,
+          225
+        ],
+        [
+          1650,
+          225
+        ]
+      ],
+      "confidence": 0.2795571982860565,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 65,
+      "stable_id": "detector-65",
+      "polygon": [
+        [
+          595,
+          188
+        ],
+        [
+          662,
+          188
+        ],
+        [
+          662,
+          234
+        ],
+        [
+          595,
+          234
+        ]
+      ],
+      "confidence": 0.6970019936561584,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 66,
+      "stable_id": "detector-66",
+      "polygon": [
+        [
+          1010,
+          188
+        ],
+        [
+          1074,
+          188
+        ],
+        [
+          1074,
+          235
+        ],
+        [
+          1010,
+          235
+        ]
+      ],
+      "confidence": 0.3970557451248169,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 67,
+      "stable_id": "detector-67",
+      "polygon": [
+        [
+          1132,
+          188
+        ],
+        [
+          1195,
+          188
+        ],
+        [
+          1195,
+          230
+        ],
+        [
+          1132,
+          230
+        ]
+      ],
+      "confidence": 0.568178653717041,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 68,
+      "stable_id": "detector-68",
+      "polygon": [
+        [
+          1181,
+          188
+        ],
+        [
+          1241,
+          188
+        ],
+        [
+          1241,
+          229
+        ],
+        [
+          1181,
+          229
+        ]
+      ],
+      "confidence": 0.3805047571659088,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 69,
+      "stable_id": "detector-69",
+      "polygon": [
+        [
+          1497,
+          188
+        ],
+        [
+          1544,
+          188
+        ],
+        [
+          1544,
+          228
+        ],
+        [
+          1497,
+          228
+        ]
+      ],
+      "confidence": 0.36571502685546875,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 70,
+      "stable_id": "detector-70",
+      "polygon": [
+        [
+          380,
+          189
+        ],
+        [
+          454,
+          189
+        ],
+        [
+          454,
+          242
+        ],
+        [
+          380,
+          242
+        ]
+      ],
+      "confidence": 0.780925452709198,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 71,
+      "stable_id": "detector-71",
+      "polygon": [
+        [
+          1193,
+          189
+        ],
+        [
+          1247,
+          189
+        ],
+        [
+          1247,
+          228
+        ],
+        [
+          1193,
+          228
+        ]
+      ],
+      "confidence": 0.49159273505210876,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 72,
+      "stable_id": "detector-72",
+      "polygon": [
+        [
+          1541,
+          189
+        ],
+        [
+          1592,
+          189
+        ],
+        [
+          1592,
+          228
+        ],
+        [
+          1541,
+          228
+        ]
+      ],
+      "confidence": 0.281309574842453,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 73,
+      "stable_id": "detector-73",
+      "polygon": [
+        [
+          1561,
+          189
+        ],
+        [
+          1610,
+          189
+        ],
+        [
+          1610,
+          229
+        ],
+        [
+          1561,
+          229
+        ]
+      ],
+      "confidence": 0.259970098733902,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 74,
+      "stable_id": "detector-74",
+      "polygon": [
+        [
+          267,
+          190
+        ],
+        [
+          340,
+          190
+        ],
+        [
+          340,
+          240
+        ],
+        [
+          267,
+          240
+        ]
+      ],
+      "confidence": 0.6881053447723389,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 75,
+      "stable_id": "detector-75",
+      "polygon": [
+        [
+          433,
+          190
+        ],
+        [
+          507,
+          190
+        ],
+        [
+          507,
+          242
+        ],
+        [
+          433,
+          242
+        ]
+      ],
+      "confidence": 0.7855559587478638,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 76,
+      "stable_id": "detector-76",
+      "polygon": [
+        [
+          954,
+          190
+        ],
+        [
+          1019,
+          190
+        ],
+        [
+          1019,
+          237
+        ],
+        [
+          954,
+          237
+        ]
+      ],
+      "confidence": 0.5624576807022095,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 77,
+      "stable_id": "detector-77",
+      "polygon": [
+        [
+          1063,
+          190
+        ],
+        [
+          1126,
+          190
+        ],
+        [
+          1126,
+          234
+        ],
+        [
+          1063,
+          234
+        ]
+      ],
+      "confidence": 0.45088398456573486,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 78,
+      "stable_id": "detector-78",
+      "polygon": [
+        [
+          1234,
+          190
+        ],
+        [
+          1292,
+          190
+        ],
+        [
+          1292,
+          230
+        ],
+        [
+          1234,
+          230
+        ]
+      ],
+      "confidence": 0.553055465221405,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 79,
+      "stable_id": "detector-79",
+      "polygon": [
+        [
+          324,
+          191
+        ],
+        [
+          398,
+          191
+        ],
+        [
+          398,
+          242
+        ],
+        [
+          324,
+          242
+        ]
+      ],
+      "confidence": 0.6468270421028137,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 80,
+      "stable_id": "detector-80",
+      "polygon": [
+        [
+          543,
+          191
+        ],
+        [
+          613,
+          191
+        ],
+        [
+          613,
+          240
+        ],
+        [
+          543,
+          240
+        ]
+      ],
+      "confidence": 0.7747274041175842,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 81,
+      "stable_id": "detector-81",
+      "polygon": [
+        [
+          907,
+          191
+        ],
+        [
+          979,
+          191
+        ],
+        [
+          979,
+          238
+        ],
+        [
+          907,
+          238
+        ]
+      ],
+      "confidence": 0.6011441946029663,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 82,
+      "stable_id": "detector-82",
+      "polygon": [
+        [
+          1120,
+          191
+        ],
+        [
+          1171,
+          191
+        ],
+        [
+          1171,
+          230
+        ],
+        [
+          1120,
+          230
+        ]
+      ],
+      "confidence": 0.2750324606895447,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 83,
+      "stable_id": "detector-83",
+      "polygon": [
+        [
+          489,
+          192
+        ],
+        [
+          561,
+          192
+        ],
+        [
+          561,
+          242
+        ],
+        [
+          489,
+          242
+        ]
+      ],
+      "confidence": 0.7612621784210205,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 84,
+      "stable_id": "detector-84",
+      "polygon": [
+        [
+          706,
+          192
+        ],
+        [
+          778,
+          192
+        ],
+        [
+          778,
+          240
+        ],
+        [
+          706,
+          240
+        ]
+      ],
+      "confidence": 0.7302342057228088,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 85,
+      "stable_id": "detector-85",
+      "polygon": [
+        [
+          1029,
+          192
+        ],
+        [
+          1093,
+          192
+        ],
+        [
+          1093,
+          237
+        ],
+        [
+          1029,
+          237
+        ]
+      ],
+      "confidence": 0.2966322600841522,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 86,
+      "stable_id": "detector-86",
+      "polygon": [
+        [
+          1282,
+          192
+        ],
+        [
+          1335,
+          192
+        ],
+        [
+          1335,
+          230
+        ],
+        [
+          1282,
+          230
+        ]
+      ],
+      "confidence": 0.478744775056839,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 87,
+      "stable_id": "detector-87",
+      "polygon": [
+        [
+          1337,
+          192
+        ],
+        [
+          1393,
+          192
+        ],
+        [
+          1393,
+          231
+        ],
+        [
+          1337,
+          231
+        ]
+      ],
+      "confidence": 0.31582334637641907,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 88,
+      "stable_id": "detector-88",
+      "polygon": [
+        [
+          1470,
+          192
+        ],
+        [
+          1516,
+          192
+        ],
+        [
+          1516,
+          232
+        ],
+        [
+          1470,
+          232
+        ]
+      ],
+      "confidence": 0.3126095235347748,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 89,
+      "stable_id": "detector-89",
+      "polygon": [
+        [
+          649,
+          193
+        ],
+        [
+          723,
+          193
+        ],
+        [
+          723,
+          240
+        ],
+        [
+          649,
+          240
+        ]
+      ],
+      "confidence": 0.7069483399391174,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 90,
+      "stable_id": "detector-90",
+      "polygon": [
+        [
+          965,
+          194
+        ],
+        [
+          1044,
+          194
+        ],
+        [
+          1044,
+          242
+        ],
+        [
+          965,
+          242
+        ]
+      ],
+      "confidence": 0.3865372836589813,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 91,
+      "stable_id": "detector-91",
+      "polygon": [
+        [
+          1397,
+          194
+        ],
+        [
+          1451,
+          194
+        ],
+        [
+          1451,
+          233
+        ],
+        [
+          1397,
+          233
+        ]
+      ],
+      "confidence": 0.26447150111198425,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 92,
+      "stable_id": "detector-92",
+      "polygon": [
+        [
+          856,
+          195
+        ],
+        [
+          931,
+          195
+        ],
+        [
+          931,
+          240
+        ],
+        [
+          856,
+          240
+        ]
+      ],
+      "confidence": 0.5834032893180847,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 93,
+      "stable_id": "detector-93",
+      "polygon": [
+        [
+          234,
+          196
+        ],
+        [
+          290,
+          196
+        ],
+        [
+          290,
+          240
+        ],
+        [
+          234,
+          240
+        ]
+      ],
+      "confidence": 0.29866981506347656,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 94,
+      "stable_id": "detector-94",
+      "polygon": [
+        [
+          812,
+          197
+        ],
+        [
+          883,
+          197
+        ],
+        [
+          883,
+          241
+        ],
+        [
+          812,
+          241
+        ]
+      ],
+      "confidence": 0.42349013686180115,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 95,
+      "stable_id": "detector-95",
+      "polygon": [
+        [
+          1036,
+          200
+        ],
+        [
+          1100,
+          200
+        ],
+        [
+          1100,
+          242
+        ],
+        [
+          1036,
+          242
+        ]
+      ],
+      "confidence": 0.2729434370994568,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 96,
+      "stable_id": "detector-96",
+      "polygon": [
+        [
+          1469,
+          200
+        ],
+        [
+          1514,
+          200
+        ],
+        [
+          1514,
+          235
+        ],
+        [
+          1469,
+          235
+        ]
+      ],
+      "confidence": 0.2644299566745758,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 97,
+      "stable_id": "detector-97",
+      "polygon": [
+        [
+          1198,
+          258
+        ],
+        [
+          1275,
+          258
+        ],
+        [
+          1275,
+          314
+        ],
+        [
+          1198,
+          314
+        ]
+      ],
+      "confidence": 0.6691575050354004,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 98,
+      "stable_id": "detector-98",
+      "polygon": [
+        [
+          1667,
+          258
+        ],
+        [
+          1735,
+          258
+        ],
+        [
+          1735,
+          307
+        ],
+        [
+          1667,
+          307
+        ]
+      ],
+      "confidence": 0.46173951029777527,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 99,
+      "stable_id": "detector-99",
+      "polygon": [
+        [
+          1436,
+          260
+        ],
+        [
+          1509,
+          260
+        ],
+        [
+          1509,
+          312
+        ],
+        [
+          1436,
+          312
+        ]
+      ],
+      "confidence": 0.5488033890724182,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 100,
+      "stable_id": "detector-100",
+      "polygon": [
+        [
+          1513,
+          260
+        ],
+        [
+          1586,
+          260
+        ],
+        [
+          1586,
+          312
+        ],
+        [
+          1513,
+          312
+        ]
+      ],
+      "confidence": 0.5560553073883057,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 101,
+      "stable_id": "detector-101",
+      "polygon": [
+        [
+          1773,
+          260
+        ],
+        [
+          1803,
+          260
+        ],
+        [
+          1803,
+          300
+        ],
+        [
+          1773,
+          300
+        ]
+      ],
+      "confidence": 0.26559677720069885,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 102,
+      "stable_id": "detector-102",
+      "polygon": [
+        [
+          1384,
+          262
+        ],
+        [
+          1458,
+          262
+        ],
+        [
+          1458,
+          317
+        ],
+        [
+          1384,
+          317
+        ]
+      ],
+      "confidence": 0.6823840141296387,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 103,
+      "stable_id": "detector-103",
+      "polygon": [
+        [
+          1673,
+          262
+        ],
+        [
+          1739,
+          262
+        ],
+        [
+          1739,
+          315
+        ],
+        [
+          1673,
+          315
+        ]
+      ],
+      "confidence": 0.3483392894268036,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 104,
+      "stable_id": "detector-104",
+      "polygon": [
+        [
+          892,
+          263
+        ],
+        [
+          979,
+          263
+        ],
+        [
+          979,
+          318
+        ],
+        [
+          892,
+          318
+        ]
+      ],
+      "confidence": 0.5786287784576416,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 105,
+      "stable_id": "detector-105",
+      "polygon": [
+        [
+          1139,
+          263
+        ],
+        [
+          1210,
+          263
+        ],
+        [
+          1210,
+          314
+        ],
+        [
+          1139,
+          314
+        ]
+      ],
+      "confidence": 0.4880352318286896,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 106,
+      "stable_id": "detector-106",
+      "polygon": [
+        [
+          1616,
+          263
+        ],
+        [
+          1684,
+          263
+        ],
+        [
+          1684,
+          315
+        ],
+        [
+          1616,
+          315
+        ]
+      ],
+      "confidence": 0.4830326735973358,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 107,
+      "stable_id": "detector-107",
+      "polygon": [
+        [
+          1333,
+          264
+        ],
+        [
+          1406,
+          264
+        ],
+        [
+          1406,
+          317
+        ],
+        [
+          1333,
+          317
+        ]
+      ],
+      "confidence": 0.6172179579734802,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 108,
+      "stable_id": "detector-108",
+      "polygon": [
+        [
+          1070,
+          265
+        ],
+        [
+          1139,
+          265
+        ],
+        [
+          1139,
+          317
+        ],
+        [
+          1070,
+          317
+        ]
+      ],
+      "confidence": 0.3637256622314453,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 109,
+      "stable_id": "detector-109",
+      "polygon": [
+        [
+          1091,
+          266
+        ],
+        [
+          1160,
+          266
+        ],
+        [
+          1160,
+          317
+        ],
+        [
+          1091,
+          317
+        ]
+      ],
+      "confidence": 0.46178513765335083,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 110,
+      "stable_id": "detector-110",
+      "polygon": [
+        [
+          1732,
+          266
+        ],
+        [
+          1799,
+          266
+        ],
+        [
+          1799,
+          312
+        ],
+        [
+          1732,
+          312
+        ]
+      ],
+      "confidence": 0.3730887472629547,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 111,
+      "stable_id": "detector-111",
+      "polygon": [
+        [
+          789,
+          267
+        ],
+        [
+          866,
+          267
+        ],
+        [
+          866,
+          324
+        ],
+        [
+          789,
+          324
+        ]
+      ],
+      "confidence": 0.7252333760261536,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 112,
+      "stable_id": "detector-112",
+      "polygon": [
+        [
+          1620,
+          267
+        ],
+        [
+          1695,
+          267
+        ],
+        [
+          1695,
+          320
+        ],
+        [
+          1620,
+          320
+        ]
+      ],
+      "confidence": 0.37713107466697693,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 113,
+      "stable_id": "detector-113",
+      "polygon": [
+        [
+          660,
+          268
+        ],
+        [
+          742,
+          268
+        ],
+        [
+          742,
+          327
+        ],
+        [
+          660,
+          327
+        ]
+      ],
+      "confidence": 0.7636923789978027,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 114,
+      "stable_id": "detector-114",
+      "polygon": [
+        [
+          723,
+          268
+        ],
+        [
+          806,
+          268
+        ],
+        [
+          806,
+          326
+        ],
+        [
+          723,
+          326
+        ]
+      ],
+      "confidence": 0.7430487275123596,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 115,
+      "stable_id": "detector-115",
+      "polygon": [
+        [
+          842,
+          268
+        ],
+        [
+          918,
+          268
+        ],
+        [
+          918,
+          319
+        ],
+        [
+          842,
+          319
+        ]
+      ],
+      "confidence": 0.6971549987792969,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 116,
+      "stable_id": "detector-116",
+      "polygon": [
+        [
+          1008,
+          268
+        ],
+        [
+          1073,
+          268
+        ],
+        [
+          1073,
+          317
+        ],
+        [
+          1008,
+          317
+        ]
+      ],
+      "confidence": 0.6039914488792419,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 117,
+      "stable_id": "detector-117",
+      "polygon": [
+        [
+          219,
+          269
+        ],
+        [
+          304,
+          269
+        ],
+        [
+          304,
+          330
+        ],
+        [
+          219,
+          330
+        ]
+      ],
+      "confidence": 0.8224756121635437,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 118,
+      "stable_id": "detector-118",
+      "polygon": [
+        [
+          597,
+          269
+        ],
+        [
+          680,
+          269
+        ],
+        [
+          680,
+          328
+        ],
+        [
+          597,
+          328
+        ]
+      ],
+      "confidence": 0.792951762676239,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 119,
+      "stable_id": "detector-119",
+      "polygon": [
+        [
+          741,
+          270
+        ],
+        [
+          812,
+          270
+        ],
+        [
+          812,
+          325
+        ],
+        [
+          741,
+          325
+        ]
+      ],
+      "confidence": 0.4058813452720642,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 120,
+      "stable_id": "detector-120",
+      "polygon": [
+        [
+          1051,
+          270
+        ],
+        [
+          1112,
+          270
+        ],
+        [
+          1112,
+          320
+        ],
+        [
+          1051,
+          320
+        ]
+      ],
+      "confidence": 0.4866941571235657,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 121,
+      "stable_id": "detector-121",
+      "polygon": [
+        [
+          1259,
+          270
+        ],
+        [
+          1324,
+          270
+        ],
+        [
+          1324,
+          317
+        ],
+        [
+          1259,
+          317
+        ]
+      ],
+      "confidence": 0.28321030735969543,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 122,
+      "stable_id": "detector-122",
+      "polygon": [
+        [
+          533,
+          271
+        ],
+        [
+          618,
+          271
+        ],
+        [
+          618,
+          329
+        ],
+        [
+          533,
+          329
+        ]
+      ],
+      "confidence": 0.8133504986763,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 123,
+      "stable_id": "detector-123",
+      "polygon": [
+        [
+          962,
+          271
+        ],
+        [
+          1038,
+          271
+        ],
+        [
+          1038,
+          320
+        ],
+        [
+          962,
+          320
+        ]
+      ],
+      "confidence": 0.6293110847473145,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 124,
+      "stable_id": "detector-124",
+      "polygon": [
+        [
+          1572,
+          271
+        ],
+        [
+          1637,
+          271
+        ],
+        [
+          1637,
+          322
+        ],
+        [
+          1572,
+          322
+        ]
+      ],
+      "confidence": 0.4349531829357147,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 125,
+      "stable_id": "detector-125",
+      "polygon": [
+        [
+          1484,
+          272
+        ],
+        [
+          1543,
+          272
+        ],
+        [
+          1543,
+          323
+        ],
+        [
+          1484,
+          323
+        ]
+      ],
+      "confidence": 0.35131245851516724,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 126,
+      "stable_id": "detector-126",
+      "polygon": [
+        [
+          281,
+          273
+        ],
+        [
+          371,
+          273
+        ],
+        [
+          371,
+          330
+        ],
+        [
+          281,
+          330
+        ]
+      ],
+      "confidence": 0.7880532741546631,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 127,
+      "stable_id": "detector-127",
+      "polygon": [
+        [
+          471,
+          273
+        ],
+        [
+          560,
+          273
+        ],
+        [
+          560,
+          329
+        ],
+        [
+          471,
+          329
+        ]
+      ],
+      "confidence": 0.7669026255607605,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 128,
+      "stable_id": "detector-128",
+      "polygon": [
+        [
+          345,
+          274
+        ],
+        [
+          433,
+          274
+        ],
+        [
+          433,
+          329
+        ],
+        [
+          345,
+          329
+        ]
+      ],
+      "confidence": 0.8052781820297241,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 129,
+      "stable_id": "detector-129",
+      "polygon": [
+        [
+          408,
+          274
+        ],
+        [
+          496,
+          274
+        ],
+        [
+          496,
+          329
+        ],
+        [
+          408,
+          329
+        ]
+      ],
+      "confidence": 0.7884837985038757,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 130,
+      "stable_id": "detector-130",
+      "polygon": [
+        [
+          159,
+          275
+        ],
+        [
+          244,
+          275
+        ],
+        [
+          244,
+          333
+        ],
+        [
+          159,
+          333
+        ]
+      ],
+      "confidence": 0.6575839519500732,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 131,
+      "stable_id": "detector-131",
+      "polygon": [
+        [
+          1777,
+          297
+        ],
+        [
+          1803,
+          297
+        ],
+        [
+          1803,
+          347
+        ],
+        [
+          1777,
+          347
+        ]
+      ],
+      "confidence": 0.26160505414009094,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 132,
+      "stable_id": "detector-132",
+      "polygon": [
+        [
+          1728,
+          307
+        ],
+        [
+          1800,
+          307
+        ],
+        [
+          1800,
+          360
+        ],
+        [
+          1728,
+          360
+        ]
+      ],
+      "confidence": 0.6433531045913696,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 133,
+      "stable_id": "detector-133",
+      "polygon": [
+        [
+          1674,
+          309
+        ],
+        [
+          1751,
+          309
+        ],
+        [
+          1751,
+          362
+        ],
+        [
+          1674,
+          362
+        ]
+      ],
+      "confidence": 0.5709834694862366,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 134,
+      "stable_id": "detector-134",
+      "polygon": [
+        [
+          902,
+          310
+        ],
+        [
+          987,
+          310
+        ],
+        [
+          987,
+          368
+        ],
+        [
+          902,
+          368
+        ]
+      ],
+      "confidence": 0.6665363311767578,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 135,
+      "stable_id": "detector-135",
+      "polygon": [
+        [
+          1157,
+          310
+        ],
+        [
+          1239,
+          310
+        ],
+        [
+          1239,
+          368
+        ],
+        [
+          1157,
+          368
+        ]
+      ],
+      "confidence": 0.6662279367446899,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 136,
+      "stable_id": "detector-136",
+      "polygon": [
+        [
+          1223,
+          310
+        ],
+        [
+          1309,
+          310
+        ],
+        [
+          1309,
+          370
+        ],
+        [
+          1223,
+          370
+        ]
+      ],
+      "confidence": 0.7042215466499329,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 137,
+      "stable_id": "detector-137",
+      "polygon": [
+        [
+          1286,
+          310
+        ],
+        [
+          1368,
+          310
+        ],
+        [
+          1368,
+          369
+        ],
+        [
+          1286,
+          369
+        ]
+      ],
+      "confidence": 0.6572885513305664,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 138,
+      "stable_id": "detector-138",
+      "polygon": [
+        [
+          1483,
+          310
+        ],
+        [
+          1559,
+          310
+        ],
+        [
+          1559,
+          366
+        ],
+        [
+          1483,
+          366
+        ]
+      ],
+      "confidence": 0.6512555480003357,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 139,
+      "stable_id": "detector-139",
+      "polygon": [
+        [
+          1544,
+          310
+        ],
+        [
+          1624,
+          310
+        ],
+        [
+          1624,
+          367
+        ],
+        [
+          1544,
+          367
+        ]
+      ],
+      "confidence": 0.6166378259658813,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 140,
+      "stable_id": "detector-140",
+      "polygon": [
+        [
+          1093,
+          311
+        ],
+        [
+          1172,
+          311
+        ],
+        [
+          1172,
+          367
+        ],
+        [
+          1093,
+          367
+        ]
+      ],
+      "confidence": 0.6927792429924011,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 141,
+      "stable_id": "detector-141",
+      "polygon": [
+        [
+          1615,
+          311
+        ],
+        [
+          1695,
+          311
+        ],
+        [
+          1695,
+          365
+        ],
+        [
+          1615,
+          365
+        ]
+      ],
+      "confidence": 0.6142898201942444,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 142,
+      "stable_id": "detector-142",
+      "polygon": [
+        [
+          965,
+          312
+        ],
+        [
+          1043,
+          312
+        ],
+        [
+          1043,
+          367
+        ],
+        [
+          965,
+          367
+        ]
+      ],
+      "confidence": 0.6733112931251526,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 143,
+      "stable_id": "detector-143",
+      "polygon": [
+        [
+          1351,
+          312
+        ],
+        [
+          1434,
+          312
+        ],
+        [
+          1434,
+          370
+        ],
+        [
+          1351,
+          370
+        ]
+      ],
+      "confidence": 0.7036420702934265,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 144,
+      "stable_id": "detector-144",
+      "polygon": [
+        [
+          1419,
+          312
+        ],
+        [
+          1501,
+          312
+        ],
+        [
+          1501,
+          369
+        ],
+        [
+          1419,
+          369
+        ]
+      ],
+      "confidence": 0.713711142539978,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 145,
+      "stable_id": "detector-145",
+      "polygon": [
+        [
+          836,
+          313
+        ],
+        [
+          926,
+          313
+        ],
+        [
+          926,
+          374
+        ],
+        [
+          836,
+          374
+        ]
+      ],
+      "confidence": 0.6657190918922424,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 146,
+      "stable_id": "detector-146",
+      "polygon": [
+        [
+          1165,
+          313
+        ],
+        [
+          1252,
+          313
+        ],
+        [
+          1252,
+          374
+        ],
+        [
+          1165,
+          374
+        ]
+      ],
+      "confidence": 0.27910372614860535,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 147,
+      "stable_id": "detector-147",
+      "polygon": [
+        [
+          1030,
+          314
+        ],
+        [
+          1114,
+          314
+        ],
+        [
+          1114,
+          371
+        ],
+        [
+          1030,
+          371
+        ]
+      ],
+      "confidence": 0.679107666015625,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 148,
+      "stable_id": "detector-148",
+      "polygon": [
+        [
+          968,
+          315
+        ],
+        [
+          1059,
+          315
+        ],
+        [
+          1059,
+          376
+        ],
+        [
+          968,
+          376
+        ]
+      ],
+      "confidence": 0.39746564626693726,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 149,
+      "stable_id": "detector-149",
+      "polygon": [
+        [
+          1291,
+          315
+        ],
+        [
+          1380,
+          315
+        ],
+        [
+          1380,
+          375
+        ],
+        [
+          1291,
+          375
+        ]
+      ],
+      "confidence": 0.45789283514022827,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 150,
+      "stable_id": "detector-150",
+      "polygon": [
+        [
+          701,
+          318
+        ],
+        [
+          797,
+          318
+        ],
+        [
+          797,
+          384
+        ],
+        [
+          701,
+          384
+        ]
+      ],
+      "confidence": 0.7168644070625305,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 151,
+      "stable_id": "detector-151",
+      "polygon": [
+        [
+          766,
+          319
+        ],
+        [
+          866,
+          319
+        ],
+        [
+          866,
+          385
+        ],
+        [
+          766,
+          385
+        ]
+      ],
+      "confidence": 0.7306066751480103,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 152,
+      "stable_id": "detector-152",
+      "polygon": [
+        [
+          635,
+          320
+        ],
+        [
+          733,
+          320
+        ],
+        [
+          733,
+          385
+        ],
+        [
+          635,
+          385
+        ]
+      ],
+      "confidence": 0.791946530342102,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 153,
+      "stable_id": "detector-153",
+      "polygon": [
+        [
+          907,
+          320
+        ],
+        [
+          996,
+          320
+        ],
+        [
+          996,
+          381
+        ],
+        [
+          907,
+          381
+        ]
+      ],
+      "confidence": 0.3445328176021576,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 154,
+      "stable_id": "detector-154",
+      "polygon": [
+        [
+          571,
+          321
+        ],
+        [
+          667,
+          321
+        ],
+        [
+          667,
+          386
+        ],
+        [
+          571,
+          386
+        ]
+      ],
+      "confidence": 0.809941291809082,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 155,
+      "stable_id": "detector-155",
+      "polygon": [
+        [
+          239,
+          323
+        ],
+        [
+          332,
+          323
+        ],
+        [
+          332,
+          387
+        ],
+        [
+          239,
+          387
+        ]
+      ],
+      "confidence": 0.8159195780754089,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 156,
+      "stable_id": "detector-156",
+      "polygon": [
+        [
+          438,
+          323
+        ],
+        [
+          533,
+          323
+        ],
+        [
+          533,
+          386
+        ],
+        [
+          438,
+          386
+        ]
+      ],
+      "confidence": 0.8080345392227173,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 157,
+      "stable_id": "detector-157",
+      "polygon": [
+        [
+          505,
+          323
+        ],
+        [
+          599,
+          323
+        ],
+        [
+          599,
+          386
+        ],
+        [
+          505,
+          386
+        ]
+      ],
+      "confidence": 0.8045799136161804,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 158,
+      "stable_id": "detector-158",
+      "polygon": [
+        [
+          173,
+          324
+        ],
+        [
+          266,
+          324
+        ],
+        [
+          266,
+          387
+        ],
+        [
+          173,
+          387
+        ]
+      ],
+      "confidence": 0.7551899552345276,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 159,
+      "stable_id": "detector-159",
+      "polygon": [
+        [
+          305,
+          324
+        ],
+        [
+          399,
+          324
+        ],
+        [
+          399,
+          387
+        ],
+        [
+          305,
+          387
+        ]
+      ],
+      "confidence": 0.8112074732780457,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 160,
+      "stable_id": "detector-160",
+      "polygon": [
+        [
+          371,
+          324
+        ],
+        [
+          466,
+          324
+        ],
+        [
+          466,
+          387
+        ],
+        [
+          371,
+          387
+        ]
+      ],
+      "confidence": 0.8147402405738831,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 161,
+      "stable_id": "detector-161",
+      "polygon": [
+        [
+          1295,
+          325
+        ],
+        [
+          1381,
+          325
+        ],
+        [
+          1381,
+          378
+        ],
+        [
+          1295,
+          378
+        ]
+      ],
+      "confidence": 0.30543333292007446,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 162,
+      "stable_id": "detector-162",
+      "polygon": [
+        [
+          979,
+          332
+        ],
+        [
+          1065,
+          332
+        ],
+        [
+          1065,
+          382
+        ],
+        [
+          979,
+          382
+        ]
+      ],
+      "confidence": 0.28839603066444397,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 163,
+      "stable_id": "detector-163",
+      "polygon": [
+        [
+          1546,
+          401
+        ],
+        [
+          1635,
+          401
+        ],
+        [
+          1635,
+          480
+        ],
+        [
+          1546,
+          480
+        ]
+      ],
+      "confidence": 0.819452702999115,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 164,
+      "stable_id": "detector-164",
+      "polygon": [
+        [
+          1620,
+          401
+        ],
+        [
+          1705,
+          401
+        ],
+        [
+          1705,
+          478
+        ],
+        [
+          1620,
+          478
+        ]
+      ],
+      "confidence": 0.7675248384475708,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 165,
+      "stable_id": "detector-165",
+      "polygon": [
+        [
+          1620,
+          401
+        ],
+        [
+          1705,
+          401
+        ],
+        [
+          1705,
+          479
+        ],
+        [
+          1620,
+          479
+        ]
+      ],
+      "confidence": 0.4049772024154663,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 166,
+      "stable_id": "detector-166",
+      "polygon": [
+        [
+          1692,
+          401
+        ],
+        [
+          1778,
+          401
+        ],
+        [
+          1778,
+          479
+        ],
+        [
+          1692,
+          479
+        ]
+      ],
+      "confidence": 0.7633586525917053,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 167,
+      "stable_id": "detector-167",
+      "polygon": [
+        [
+          1763,
+          401
+        ],
+        [
+          1803,
+          401
+        ],
+        [
+          1803,
+          481
+        ],
+        [
+          1763,
+          481
+        ]
+      ],
+      "confidence": 0.7314539551734924,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 168,
+      "stable_id": "detector-168",
+      "polygon": [
+        [
+          1469,
+          403
+        ],
+        [
+          1561,
+          403
+        ],
+        [
+          1561,
+          483
+        ],
+        [
+          1469,
+          483
+        ]
+      ],
+      "confidence": 0.7863415479660034,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 169,
+      "stable_id": "detector-169",
+      "polygon": [
+        [
+          1091,
+          405
+        ],
+        [
+          1185,
+          405
+        ],
+        [
+          1185,
+          486
+        ],
+        [
+          1091,
+          486
+        ]
+      ],
+      "confidence": 0.7786255478858948,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 170,
+      "stable_id": "detector-170",
+      "polygon": [
+        [
+          856,
+          406
+        ],
+        [
+          959,
+          406
+        ],
+        [
+          959,
+          486
+        ],
+        [
+          856,
+          486
+        ]
+      ],
+      "confidence": 0.7110249996185303,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 171,
+      "stable_id": "detector-171",
+      "polygon": [
+        [
+          1016,
+          406
+        ],
+        [
+          1113,
+          406
+        ],
+        [
+          1113,
+          487
+        ],
+        [
+          1016,
+          487
+        ]
+      ],
+      "confidence": 0.7695567011833191,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 172,
+      "stable_id": "detector-172",
+      "polygon": [
+        [
+          1165,
+          408
+        ],
+        [
+          1257,
+          408
+        ],
+        [
+          1257,
+          488
+        ],
+        [
+          1165,
+          488
+        ]
+      ],
+      "confidence": 0.7682285308837891,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 173,
+      "stable_id": "detector-173",
+      "polygon": [
+        [
+          1321,
+          409
+        ],
+        [
+          1411,
+          409
+        ],
+        [
+          1411,
+          487
+        ],
+        [
+          1321,
+          487
+        ]
+      ],
+      "confidence": 0.8110871315002441,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 174,
+      "stable_id": "detector-174",
+      "polygon": [
+        [
+          1245,
+          410
+        ],
+        [
+          1333,
+          410
+        ],
+        [
+          1333,
+          487
+        ],
+        [
+          1245,
+          487
+        ]
+      ],
+      "confidence": 0.78852379322052,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 175,
+      "stable_id": "detector-175",
+      "polygon": [
+        [
+          1394,
+          410
+        ],
+        [
+          1486,
+          410
+        ],
+        [
+          1486,
+          486
+        ],
+        [
+          1394,
+          486
+        ]
+      ],
+      "confidence": 0.8181582093238831,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 176,
+      "stable_id": "detector-176",
+      "polygon": [
+        [
+          934,
+          411
+        ],
+        [
+          1032,
+          411
+        ],
+        [
+          1032,
+          489
+        ],
+        [
+          934,
+          489
+        ]
+      ],
+      "confidence": 0.7589491605758667,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 177,
+      "stable_id": "detector-177",
+      "polygon": [
+        [
+          767,
+          418
+        ],
+        [
+          873,
+          418
+        ],
+        [
+          873,
+          495
+        ],
+        [
+          767,
+          495
+        ]
+      ],
+      "confidence": 0.742859423160553,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 178,
+      "stable_id": "detector-178",
+      "polygon": [
+        [
+          364,
+          419
+        ],
+        [
+          489,
+          419
+        ],
+        [
+          489,
+          499
+        ],
+        [
+          364,
+          499
+        ]
+      ],
+      "confidence": 0.7228190302848816,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 179,
+      "stable_id": "detector-179",
+      "polygon": [
+        [
+          611,
+          422
+        ],
+        [
+          719,
+          422
+        ],
+        [
+          719,
+          498
+        ],
+        [
+          611,
+          498
+        ]
+      ],
+      "confidence": 0.760074257850647,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 180,
+      "stable_id": "detector-180",
+      "polygon": [
+        [
+          448,
+          423
+        ],
+        [
+          561,
+          423
+        ],
+        [
+          561,
+          501
+        ],
+        [
+          448,
+          501
+        ]
+      ],
+      "confidence": 0.7870871424674988,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 181,
+      "stable_id": "detector-181",
+      "polygon": [
+        [
+          685,
+          423
+        ],
+        [
+          791,
+          423
+        ],
+        [
+          791,
+          497
+        ],
+        [
+          685,
+          497
+        ]
+      ],
+      "confidence": 0.7508379817008972,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 182,
+      "stable_id": "detector-182",
+      "polygon": [
+        [
+          520,
+          424
+        ],
+        [
+          640,
+          424
+        ],
+        [
+          640,
+          504
+        ],
+        [
+          520,
+          504
+        ]
+      ],
+      "confidence": 0.776690661907196,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 183,
+      "stable_id": "detector-183",
+      "polygon": [
+        [
+          296,
+          425
+        ],
+        [
+          408,
+          425
+        ],
+        [
+          408,
+          501
+        ],
+        [
+          296,
+          501
+        ]
+      ],
+      "confidence": 0.5637217164039612,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 184,
+      "stable_id": "detector-184",
+      "polygon": [
+        [
+          1604,
+          473
+        ],
+        [
+          1700,
+          473
+        ],
+        [
+          1700,
+          566
+        ],
+        [
+          1604,
+          566
+        ]
+      ],
+      "confidence": 0.8529267311096191,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 185,
+      "stable_id": "detector-185",
+      "polygon": [
+        [
+          1763,
+          474
+        ],
+        [
+          1803,
+          474
+        ],
+        [
+          1803,
+          565
+        ],
+        [
+          1763,
+          565
+        ]
+      ],
+      "confidence": 0.7869225740432739,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 186,
+      "stable_id": "detector-186",
+      "polygon": [
+        [
+          1525,
+          475
+        ],
+        [
+          1620,
+          475
+        ],
+        [
+          1620,
+          567
+        ],
+        [
+          1525,
+          567
+        ]
+      ],
+      "confidence": 0.837986946105957,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 187,
+      "stable_id": "detector-187",
+      "polygon": [
+        [
+          1685,
+          476
+        ],
+        [
+          1780,
+          476
+        ],
+        [
+          1780,
+          565
+        ],
+        [
+          1685,
+          565
+        ]
+      ],
+      "confidence": 0.842927098274231,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 188,
+      "stable_id": "detector-188",
+      "polygon": [
+        [
+          1444,
+          477
+        ],
+        [
+          1539,
+          477
+        ],
+        [
+          1539,
+          567
+        ],
+        [
+          1444,
+          567
+        ]
+      ],
+      "confidence": 0.8432613015174866,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 189,
+      "stable_id": "detector-189",
+      "polygon": [
+        [
+          1280,
+          479
+        ],
+        [
+          1377,
+          479
+        ],
+        [
+          1377,
+          570
+        ],
+        [
+          1280,
+          570
+        ]
+      ],
+      "confidence": 0.8327270746231079,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 190,
+      "stable_id": "detector-190",
+      "polygon": [
+        [
+          1197,
+          480
+        ],
+        [
+          1295,
+          480
+        ],
+        [
+          1295,
+          569
+        ],
+        [
+          1197,
+          569
+        ]
+      ],
+      "confidence": 0.8039223551750183,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 191,
+      "stable_id": "detector-191",
+      "polygon": [
+        [
+          1359,
+          480
+        ],
+        [
+          1460,
+          480
+        ],
+        [
+          1460,
+          570
+        ],
+        [
+          1359,
+          570
+        ]
+      ],
+      "confidence": 0.8207331299781799,
+      "class_name": "space-empty"
+    },
+    {
+      "candidate_id": 192,
+      "stable_id": "detector-192",
+      "polygon": [
+        [
+          1112,
+          481
+        ],
+        [
+          1213,
+          481
+        ],
+        [
+          1213,
+          569
+        ],
+        [
+          1112,
+          569
+        ]
+      ],
+      "confidence": 0.785283625125885,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 193,
+      "stable_id": "detector-193",
+      "polygon": [
+        [
+          1029,
+          482
+        ],
+        [
+          1129,
+          482
+        ],
+        [
+          1129,
+          569
+        ],
+        [
+          1029,
+          569
+        ]
+      ],
+      "confidence": 0.7643428444862366,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 194,
+      "stable_id": "detector-194",
+      "polygon": [
+        [
+          769,
+          483
+        ],
+        [
+          880,
+          483
+        ],
+        [
+          880,
+          574
+        ],
+        [
+          769,
+          574
+        ]
+      ],
+      "confidence": 0.7409377098083496,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 195,
+      "stable_id": "detector-195",
+      "polygon": [
+        [
+          948,
+          483
+        ],
+        [
+          1051,
+          483
+        ],
+        [
+          1051,
+          568
+        ],
+        [
+          948,
+          568
+        ]
+      ],
+      "confidence": 0.7479157447814941,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 196,
+      "stable_id": "detector-196",
+      "polygon": [
+        [
+          851,
+          484
+        ],
+        [
+          960,
+          484
+        ],
+        [
+          960,
+          574
+        ],
+        [
+          851,
+          574
+        ]
+      ],
+      "confidence": 0.7483968138694763,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 197,
+      "stable_id": "detector-197",
+      "polygon": [
+        [
+          682,
+          485
+        ],
+        [
+          797,
+          485
+        ],
+        [
+          797,
+          575
+        ],
+        [
+          682,
+          575
+        ]
+      ],
+      "confidence": 0.7467374205589294,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 198,
+      "stable_id": "detector-198",
+      "polygon": [
+        [
+          583,
+          489
+        ],
+        [
+          707,
+          489
+        ],
+        [
+          707,
+          580
+        ],
+        [
+          583,
+          580
+        ]
+      ],
+      "confidence": 0.6928613781929016,
+      "class_name": "space-occupied"
+    },
+    {
+      "candidate_id": 199,
+      "stable_id": "detector-199",
+      "polygon": [
+        [
+          402,
+          498
+        ],
+        [
+          531,
+          498
+        ],
+        [
+          531,
+          580
+        ],
+        [
+          402,
+          580
+        ]
+      ],
+      "confidence": 0.6498502492904663,
+      "class_name": "space-occupied"
+    }
+  ]
+}

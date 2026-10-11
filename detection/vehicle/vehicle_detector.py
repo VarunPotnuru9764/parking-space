@@ -5,8 +5,15 @@ class VehicleDetector:
     def __init__(self, mode = "yolo", model_path = "yolo11n.pt", confidence_threshold = 0.5):
         self.mode = mode
         self.confidence_threshold = confidence_threshold
-        if self.mode == "yolo":
+        if self.mode in ("yolo", "parking_spaces"):
             self.model = YOLO(model_path)
+            if self.mode == "parking_spaces":
+                class_names = set(self.model.names.values())
+                if not {"space-empty", "space-occupied"}.issubset(class_names):
+                    raise ValueError(
+                        "Parking-space mode requires weights with 'space-empty' "
+                        "and 'space-occupied' classes"
+                    )
 
         elif self.mode == "simulator":
             self.model = None
@@ -24,6 +31,9 @@ class VehicleDetector:
     def detect(self, frame):
             if self.mode == "yolo":
                 return self.detect_yolo(frame)
+
+            if self.mode == "parking_spaces":
+                return self.detect_parking_spaces(frame)
 
             if self.mode == "simulator":
                 return self.detect_simulator(frame)
@@ -53,6 +63,33 @@ class VehicleDetector:
                 })
 
         return vehicles
+
+    def detect_parking_spaces(self, frame):
+        results = self.model(
+            frame,
+            verbose=False,
+            conf=self.confidence_threshold,
+        )
+        spaces = []
+        for result in results:
+            if result.boxes is None:
+                continue
+
+            for box in result.boxes:
+                class_id = int(box.cls[0])
+                class_name = self.model.names[class_id]
+                if class_name not in ("space-empty", "space-occupied"):
+                    continue
+
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                spaces.append({
+                    "class_id": class_id,
+                    "class_name": class_name,
+                    "confidence": float(box.conf[0]),
+                    "bounding_box": (x1, y1, x2, y2),
+                })
+
+        return spaces
 
     def detect_simulator(self, frame):
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)

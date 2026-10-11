@@ -31,7 +31,7 @@ def scale_layout_to_frame(layout, frame_width, frame_height, reference_width, re
         ],
     }
 
-def draw_overlay(frame, layout, vehicles, tracker_states):
+def draw_overlay(frame, layout, vehicles, tracker_states, slot_detections=None):
     output = frame.copy()
     for vehicle in vehicles:
         x1, y1, x2, y2 = vehicle["bounding_box"]
@@ -39,7 +39,7 @@ def draw_overlay(frame, layout, vehicles, tracker_states):
         cv2.rectangle(output, (x1, y1), (x2, y2), (255, 200, 0), 2)
         cv2.putText(
             output,
-            f"Vehicle {confidence:.0%}",
+            f"{vehicle.get('class_name', 'Vehicle')} {confidence:.0%}",
             (x1, max(18, y1 - 7)),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
@@ -52,20 +52,27 @@ def draw_overlay(frame, layout, vehicles, tracker_states):
         slot_number = space["slot_number"]
         polygon = space["polygon"]
         polygon_points = np.array(polygon, dtype=np.int32)
-        occupied = tracker_states.get(slot_number, False)
-        color = (0, 0, 255) if occupied else (0, 200, 0)
+        occupied = tracker_states.get(slot_number)
+        color = (0, 0, 255) if occupied is True else (0, 200, 0) if occupied is False else (160, 160, 160)
 
         cv2.polylines(output, [polygon_points], True, color, 3, cv2.LINE_AA)
 
         best_overlap = 0.0
         best_confidence = 0.0
-        for vehicle in vehicles:
+        # Parking-space classifiers already map each detection to one slot in
+        # OccupancyPipeline. Reuse that mapping instead of rasterizing every
+        # detection against every polygon (hundreds of thousands of masks/frame).
+        slot_vehicle = slot_detections.get(slot_number) if slot_detections is not None else None
+        candidates = (slot_vehicle,) if slot_detections is not None and slot_vehicle else (
+            vehicles if slot_detections is None else ()
+        )
+        for vehicle in candidates:
             overlap = calculate_overlap_ratio(vehicle["bounding_box"], polygon)
             if overlap > best_overlap:
                 best_overlap = overlap
                 best_confidence = vehicle.get("confidence", 0.0)
 
-        status = "OCCUPIED" if occupied else "VACANT"
+        status = "OCCUPIED" if occupied is True else "VACANT" if occupied is False else "CHECKING"
         lines = (
             f"{slot_number}: {status}",
             f"Ovl {best_overlap:.0%} | Conf {best_confidence:.0%}",

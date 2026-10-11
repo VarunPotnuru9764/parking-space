@@ -7,10 +7,11 @@ env_path = Path(__file__).resolve().parent.parent / ".env"
 config = dotenv_values(env_path)
 API_URL = (config.get("API_URL") or "http://localhost:8000").rstrip("/")
 DEFAULT_LOT_SLUG = config.get("PARKING_LOT_SLUG", "simulator")
+REQUEST_TIMEOUT_SECONDS = 10
 
 
 def get_lots():
-    response = requests.get(f"{API_URL}/lots/")
+    response = requests.get(f"{API_URL}/lots/", timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.json()
 
@@ -27,7 +28,11 @@ def resolve_lot_id(lot_id=None, lot_slug=None):
 
 def get_parking_spaces(lot_id=None, lot_slug=None):
     scoped_lot_id = resolve_lot_id(lot_id, lot_slug)
-    response = requests.get(f"{API_URL}/parking/", params={"lot_id": scoped_lot_id})
+    response = requests.get(
+        f"{API_URL}/parking/",
+        params={"lot_id": scoped_lot_id},
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
     response.raise_for_status()
     return response.json()
 
@@ -64,7 +69,11 @@ def synchronize_layout(layout, lot_id=None, lot_slug=None):
                 for item in comparison["new_spaces"]
             ],
         }
-        response = requests.post(f"{API_URL}/parking/bulk", json=payload)
+        response = requests.post(
+            f"{API_URL}/parking/bulk",
+            json=payload,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
         response.raise_for_status()
         new_claim_codes = response.json().get("new_claim_codes", {})
         print(f"Synchronized {len(comparison['new_spaces'])} new spaces into lot {scoped_lot_id}")

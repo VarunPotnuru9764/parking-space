@@ -56,13 +56,6 @@ def initiate_parking_claim(parking_id: int, claim: ParkingClaim, lot_id: int | N
             detail = "No active parking session found"
         )
 
-    '''user = db.query(User).filter(User.user_id == claim.user_id).first()
-    if user is None:
-        raise HTTPException(
-            status_code = 404,
-            detail = "User not found"
-    )'''
-
     current_time = datetime.now()
     claim_window = timedelta(minutes = 5)
     if current_time > history.time_arrived + claim_window:
@@ -147,12 +140,6 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, lot_id: i
             detail = "Only an occupied parking space can be claimed"
         )
 
-    ''' if parking.claim_code != claim.claim_code:
-        raise HTTPException(
-            status_code = 403,
-            detail = "Invalid claim code"
-        ) '''
-    
     if parking.user_id is not None:
         raise HTTPException(
             status_code = 409,
@@ -169,13 +156,6 @@ def confirm_parking_claim(parking_id: int, claim: ParkingClaimConfirm, lot_id: i
             status_code = 400,
             detail = "No active parking session found"
         )
-
-    '''user = db.query(User).filter(User.user_id == claim.user_id).first()
-    if user is None:
-        raise HTTPException(
-            status_code = 404,
-            detail = "User not found"
-    )'''
 
     current_time = datetime.now()
     claim_window = timedelta(minutes = 5)

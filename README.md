@@ -16,10 +16,10 @@ frontend/    React-based lot/camera parking-layout review and polygon editor
 Each component has its own requirements file. Install dependencies for the component you plan to run, for example:
 
 In powershell terminal
-cd backend/detection/simulator
+cd backend
 python -m venv venv
 ./venv/Scripts/Activate.ps1
-python -m pip install -r requirements.tx
+python -m pip install -r requirements.txt
 
 Run equivalent `pip install -r requirements.txt` commands from each subsection for those components
 
@@ -127,15 +127,15 @@ The detector reads the simulator's live camera feed, applies confirmed occupancy
 
 ### Run real-world video detection
 
-The real-world workflow plays the video in `detection` at its recorded frame rate, runs the existing pretrained YOLO vehicle detector, draws occupancy against the reviewed camera polygons, and sends only confirmed status changes to the selected lot. It uses `detection/layout/layouts/<lot>/<camera>.json` and the same API synchronization/updater path as the simulator. From `detection` (with the backend running and `detection/.env` configured), run:
+The real-world workflow processes the video in `detection`, classifies parking-space crops with the supplied occupancy model, draws statuses against the reviewed camera polygons, and sends confirmed status changes to the selected lot. It uses `detection/layout/layouts/<lot>/<camera>.json` and the same API synchronization/updater path as the simulator. From `detection` (with the backend running and `detection/.env` configured), run:
 
 ```powershell
 python -m vehicle.run_irl --lot campus-west --camera gate-a
 ```
 
-The default input is `12125602_30fps.mp4`, the camera layout reference image is `parking_layout_v2.png`, and the pretrained vehicle weights are `models/yolo11n.pt`. The runner resizes layout coordinates from the reference image to the video frame size, synchronizes only the selected lot, previews detections, and writes an annotated recording to a timestamped file under `detection/output/`. Press `Q` to stop early. It refuses to overwrite an existing output file.
+The default input is `12125602_30fps.mp4`, the camera layout reference image is `parking_layout_v2.png`, and the default parking-space weights are `models/parking_lot.pt` (`space-empty` / `space-occupied`). The runner fits and feature-aligns each video frame to the reference image dimensions, so detection and reviewed polygons use the same coordinate space. Use a reference image from the same camera view; the alignment check fails if it cannot reliably match the scene. Playback and the annotated output retain the source video's frame rate and duration. Inference runs asynchronously and skips a requested frame when the previous inference is still running; the latest detection overlay is carried across intervening frames. By default, it attempts inference on every source frame (`--frame-stride 1`), synchronizes only the selected lot, previews in a fitted window, and writes an annotated recording at the reference image dimensions to a timestamped file under `detection/output/`. Increase `--frame-stride` to reduce inference load without changing playback/output FPS. After three confirming inference frames, it updates slots that match a model prediction. Unmatched slots are reported and left unchanged rather than being incorrectly marked vacant. Press `Q` to stop early. It refuses to overwrite an existing output file.
 
-Use `--video path\to\another_video.mp4`, `--reference-image path\to\layout_frame.png`, or `--model-weights path\to\weights.pt` to change inputs. Use `--no-sync` for a local preview that does not contact or update the backend, and `--no-preview` to process without opening a GUI window. Detection uses the available vehicle checkpoint and checks vehicle-box overlap with the manually reviewed bay polygons; it does not infer bay occupancy from markings alone. Accurate results depend on matching the chosen camera layout and reference image to the video view. This video runner processes the file once rather than exposing a network camera URL; an actual IP camera can be added later as another `VideoCapture` source.
+Use `--video path\to\another_video.mp4`, `--reference-image path\to\layout_frame.png`, or `--model-weights path\to\weights.pt` to change inputs. For a vehicle detector instead of the parking-space classifier, pass `--detector-mode vehicles --model-weights models\yolo11n.pt`; generic vehicle weights may perform poorly on small cars in aerial footage. Use `--no-sync` for a local preview that does not contact or update the backend, and `--no-preview` to process without opening a GUI window. This video runner processes the file once rather than exposing a network camera URL; an actual IP camera can be added later as another `VideoCapture` source.
 
 ## Current scope
 The detection scripts that synchronize layouts or occupancy require a running backend and valid API/database configuration. The simulator can be run independently
