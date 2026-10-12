@@ -1,8 +1,8 @@
 import requests
 
-from api.config import get_setting
+from api.config import get_api_url, get_setting
 
-API_URL = get_setting("API_URL", "http://localhost:8000").rstrip("/")
+API_URL = get_api_url()
 DETECTION_API_TOKEN = get_setting("DETECTION_API_TOKEN")
 DEFAULT_LOT_SLUG = get_setting("PARKING_LOT_SLUG", "simulator")
 REQUEST_TIMEOUT_SECONDS = 10
