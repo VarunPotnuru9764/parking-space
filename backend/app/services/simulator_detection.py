@@ -52,8 +52,6 @@ class SimulatorDetectionJobs:
                 cwd=SIMULATOR_DIR,
                 env=env,
                 stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
                 creationflags=creationflags,
             )
         except Exception:
