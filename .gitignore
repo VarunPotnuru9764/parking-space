@@ -18,7 +18,8 @@ env/
 Thumbs.db
 
 # Large videos and generated outputs
-detection/*.mp4
+*.png
+*.mp4
 detection/output/
 
 # Database backups

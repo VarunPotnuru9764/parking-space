@@ -40,17 +40,14 @@ def main():
 
     # Process the same frame several times
     # so the tracker can confirm the state.
-    for frame_number in range(1, 5):
-
-        changes = pipeline.process_frame(image)
-
-        print(
-            f"Frame {frame_number}: "
-            f"{changes}"
-        )
-
-        if changes:
-            updater.apply_changes(changes)
+    try:
+        for frame_number in range(1, 5):
+            changes = pipeline.process_frame(image)
+            print(f"Frame {frame_number}: {changes}")
+            if changes:
+                updater.apply_changes(changes)
+    finally:
+        updater.close()
 
 if __name__ == "__main__":
     main()

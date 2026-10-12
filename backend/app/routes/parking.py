@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.auth import require_admin, require_admin_or_detection_token
 from app.models.parking import ParkingRecord
 from app.models.history import ParkingHistory
 from app.models.fare_history import FareHistory
@@ -12,6 +13,7 @@ from app.schemas.parking import (ParkingCreate, ParkingResponse, ParkingStatusUp
 from app.services.fare_engine import (calculate_occupancy, select_fare_rule, generate_fare_interval)
 
 from app.schemas.parking import ParkingBulkCreate, ParkingBulkResult
+from app.services.audit import record_event
 from decimal import Decimal
 from datetime import datetime
 import secrets
@@ -32,7 +34,7 @@ def get_parking_spaces(lot_id: int | None = None, db: Session = Depends(get_db))
     return parking_spaces
 
 @router.post("/", response_model = ParkingResponse, status_code = 201)
-def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
+def create_parking_space(parking: ParkingCreate, request: Request, db: Session = Depends(get_db), current_user = Depends(require_admin)):
     lot = resolve_lot(db, parking.lot_id)
     existing_parking = db.query(ParkingRecord).filter(
         ParkingRecord.lot_id == lot.lot_id,
@@ -53,6 +55,8 @@ def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
     )
     try:
         db.add(new_parking)
+        db.flush()
+        record_event(db, request, "parking_space.created", f"Created parking space '{new_parking.slot_number}' in lot {lot.lot_id}.", current_user.user_id)
         db.commit()
 
     except IntegrityError:
@@ -62,7 +66,7 @@ def create_parking_space(parking: ParkingCreate, db: Session = Depends(get_db)):
     return new_parking
 
 @router.post("/bulk", response_model=ParkingBulkResult, status_code=201)
-def create_parking_spaces_bulk(payload: ParkingBulkCreate, db: Session = Depends(get_db)):
+def create_parking_spaces_bulk(payload: ParkingBulkCreate, request: Request, db: Session = Depends(get_db), actor = Depends(require_admin_or_detection_token)):
     lot = resolve_lot(db, payload.lot_id)
     requested_slots = [space.slot_number for space in payload.spaces]
     if len(set(requested_slots)) != len(requested_slots):
@@ -91,6 +95,10 @@ def create_parking_spaces_bulk(payload: ParkingBulkCreate, db: Session = Depends
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A concurrent slot or claim-code conflict occurred; retry sync")
+    if new_records:
+        actor_user_id = actor.user_id if actor is not None else None
+        record_event(db, request, "parking.spaces_bulk_created", f"Detection sync created {len(new_records)} parking spaces in lot {lot.lot_id}.", actor_user_id)
+        db.commit()
     records = db.query(ParkingRecord).filter(
         ParkingRecord.lot_id == lot.lot_id,
         ParkingRecord.slot_number.in_(requested_slots),
@@ -101,8 +109,78 @@ def create_parking_spaces_bulk(payload: ParkingBulkCreate, db: Session = Depends
         "new_claim_codes": {record.slot_number: record.claim_code for record in new_records},
     }
 
+
+@router.post("/occupancy/clear")
+def clear_lot_occupancy(
+    request: Request,
+    lot_id: int,
+    db: Session = Depends(get_db),
+    actor = Depends(require_admin_or_detection_token),
+):
+    """Mark every space in one lot vacant and close any open parking sessions."""
+    lot = resolve_lot(db, lot_id)
+    current_time = datetime.now()
+    occupancy = calculate_occupancy(db, lot.lot_id)
+    fare_result = select_fare_rule(occupancy, current_time, lot.lot_id, db)
+    spaces = db.query(ParkingRecord).filter(ParkingRecord.lot_id == lot.lot_id).all()
+    vacated_count = 0
+
+    for space in spaces:
+        if space.status == "occupied":
+            vacated_count += 1
+            history = db.query(ParkingHistory).filter(
+                ParkingHistory.lot_id == lot.lot_id,
+                ParkingHistory.parking_id == space.parking_id,
+                ParkingHistory.time_left.is_(None),
+            ).order_by(ParkingHistory.time_arrived.desc()).first()
+            if history is not None:
+                if fare_result is not None:
+                    last_fare = db.query(FareHistory).filter(
+                        FareHistory.history_id == history.history_id,
+                        FareHistory.lot_id == lot.lot_id,
+                    ).order_by(FareHistory.interval_end.desc()).first()
+                    interval_start = last_fare.interval_end if last_fare is not None else history.time_arrived
+                    if current_time > interval_start:
+                        interval_hours = Decimal(str((current_time - interval_start).total_seconds() / 3600))
+                        interval_rate = Decimal(str(fare_result["rate"]))
+                        db.add(FareHistory(
+                            lot_id=lot.lot_id,
+                            history_id=history.history_id,
+                            rule_id=fare_result["rule"].rule_id,
+                            interval_start=interval_start,
+                            interval_end=current_time,
+                            rate=interval_rate,
+                            charge=interval_hours * interval_rate,
+                        ))
+                history.time_left = current_time
+                duration_hours = (current_time - history.time_arrived).total_seconds() / 3600
+                history.duration = duration_hours
+                fare_records = db.query(FareHistory).filter(
+                    FareHistory.history_id == history.history_id,
+                    FareHistory.lot_id == lot.lot_id,
+                ).all()
+                total_fare = sum((record.charge for record in fare_records), Decimal("0"))
+                history.fare_charged = total_fare
+                history.average_rate = (
+                    total_fare / Decimal(str(duration_hours)) if duration_hours > 0 else Decimal("0")
+                )
+            space.user_id = None
+            space.status = "vacant"
+            space.last_updated = current_time
+
+    actor_user_id = actor.user_id if actor is not None else None
+    record_event(
+        db,
+        request,
+        "parking.lot_occupancy_cleared",
+        f"Marked all spaces vacant in lot {lot.slug}; {vacated_count} occupied spaces were cleared.",
+        actor_user_id,
+    )
+    db.commit()
+    return {"lot_id": lot.lot_id, "space_count": len(spaces), "vacated_count": vacated_count}
+
 @router.put("/{parking_id}", response_model = ParkingResponse)
-def update_parking_status(parking_id: int, parking_update: ParkingStatusUpdate, lot_id: int | None = None, db: Session = Depends(get_db)):
+def update_parking_status(parking_id: int, parking_update: ParkingStatusUpdate, request: Request, lot_id: int | None = None, db: Session = Depends(get_db), actor = Depends(require_admin_or_detection_token)):
     query = db.query(ParkingRecord).filter(ParkingRecord.parking_id == parking_id)
     if lot_id is not None:
         query = query.filter(ParkingRecord.lot_id == lot_id)
@@ -190,5 +268,13 @@ def update_parking_status(parking_id: int, parking_update: ParkingStatusUpdate, 
         parking.status = new_status
     
     parking.last_updated = current_time
+    actor_user_id = actor.user_id if actor is not None else None
+    record_event(
+        db,
+        request,
+        "parking.status_changed",
+        f"Parking space '{parking.slot_number}' changed from {old_status} to {new_status}.",
+        actor_user_id,
+    )
     db.commit()
     return parking

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import time
-import threading
+from threading import Event
 
 from layout.layout_manager import load_layout
 from layout.layout_sync import synchronize_layout
@@ -12,6 +12,8 @@ from api.occupancy_updater import OccupancyUpdater
 
 LIVE_FEED_URL = "http://127.0.0.1:8765/video"
 OUTPUT_VIDEO_PATH = "../simulator/parking_simulation_annotated.mp4"
+SIMULATOR_LAYOUT_WIDTH = 1250
+SIMULATOR_LAYOUT_HEIGHT = 825
 
 
 def scale_layout_to_frame(layout, frame_width, frame_height, reference_width, reference_height):
@@ -111,11 +113,67 @@ def draw_overlay(frame, layout, vehicles, tracker_states, slot_detections=None):
             )
     return output
 
-def update_api(updater, changes):
+
+def run_live_detection(live_feed_url=LIVE_FEED_URL, stop_event=None, on_frame=None, on_progress=None):
+    """Consume a simulator feed without opening a desktop preview window."""
+    stop_event = stop_event or Event()
+    layout = load_layout("simulator", "default")
+    video = cv2.VideoCapture(live_feed_url)
+    video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    updater = None
+    frame_number = 0
     try:
-        updater.apply_changes(changes)
-    except Exception as e:
-        print(f"API update failed: {e}")
+        success, first_frame = video.read()
+        wait_started = time.monotonic()
+        while not success and not stop_event.is_set():
+            if time.monotonic() - wait_started > 30:
+                raise ValueError(f"Timed out waiting for simulator frames from {live_feed_url}")
+            time.sleep(0.1)
+            success, first_frame = video.read()
+        if stop_event.is_set():
+            return
+
+        frame_height, frame_width = first_frame.shape[:2]
+        video_layout = scale_layout_to_frame(
+            layout, frame_width, frame_height,
+            SIMULATOR_LAYOUT_WIDTH, SIMULATOR_LAYOUT_HEIGHT,
+        )
+        sync_result = synchronize_layout(video_layout, lot_slug="simulator")
+        updater = OccupancyUpdater(sync_result["spaces"], lot_id=sync_result["lot_id"])
+        pipeline = OccupancyPipeline(
+            layout=sync_result,
+            detector_mode="simulator",
+            confirmation_frames=3,
+        )
+
+        frame = first_frame
+        while not stop_event.is_set():
+            if frame is None:
+                success, frame = video.read()
+                if not success:
+                    time.sleep(0.02)
+                    continue
+
+            changes = pipeline.process_frame(frame)
+            if changes:
+                updater.apply_changes(changes)
+            annotated = draw_overlay(
+                frame,
+                video_layout,
+                pipeline.last_detections,
+                pipeline.tracker.states,
+            )
+            frame_number += 1
+            if on_frame:
+                on_frame(annotated, frame_number)
+            if on_progress:
+                on_progress(frame_number)
+            frame = None
+    finally:
+        video.release()
+        if updater is not None:
+            updater.clear_lot_occupancy()
+            updater.close()
 
 def main():
     layout = load_layout("simulator", "default")
@@ -134,17 +192,12 @@ def main():
         success, first_frame = video.read()
 
     frame_height, frame_width = first_frame.shape[:2]
-    reference_image = cv2.imread("parking_layout.png")
-    if reference_image is None:
-        video.release()
-        raise ValueError("Could not load layout reference image: parking_layout.png")
-    reference_height, reference_width = reference_image.shape[:2]
     video_layout = scale_layout_to_frame(
         layout,
         frame_width,
         frame_height,
-        reference_width,
-        reference_height,
+        SIMULATOR_LAYOUT_WIDTH,
+        SIMULATOR_LAYOUT_HEIGHT,
     )
 
     # Use video-pixel coordinates for both occupancy detection and the overlay.
@@ -191,7 +244,7 @@ def main():
         changes = pipeline.process_frame(frame)
         if changes:
             print(f"Confirmed changes: {changes}")
-            threading.Thread(target = update_api, args = (updater, changes), daemon = True).start()
+            updater.apply_changes(changes)
 
         annotated_frame = draw_overlay(
             frame,
@@ -208,6 +261,7 @@ def main():
     video.release()
     writer.release()
     cv2.destroyAllWindows()
+    updater.close()
     print(f"Annotated video saved to: {OUTPUT_VIDEO_PATH}")
 
 if __name__ == "__main__":

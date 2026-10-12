@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { apiRequest } from "./api.js";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const defaultName = (index) => `P${String(index + 1).padStart(2, "0")}`;
@@ -67,11 +68,11 @@ function validateEntries(entries, dimensions) {
   return { spaces, errors };
 }
 
-export default function ParkingLayoutApp() {
-  const [apiBase, setApiBase] = useState("http://localhost:8000");
-  const [lotSlug, setLotSlug] = useState("simulator");
+export default function ParkingLayoutApp({ initialLotSlug, lots = [] }) {
+  const [lotSlug, setLotSlug] = useState(initialLotSlug || "simulator");
   const [cameraId, setCameraId] = useState("default");
   const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [dimensions, setDimensions] = useState(null);
   const [entries, setEntries] = useState([]);
   const entriesRef = useRef(entries);
@@ -86,12 +87,15 @@ export default function ParkingLayoutApp() {
   const dragBefore = useRef(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [savedToast, setSavedToast] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const imageInput = useRef(null);
   const bundleInput = useRef(null);
   const svgRef = useRef(null);
 
   useEffect(() => { entriesRef.current = entries; }, [entries]);
   useEffect(() => () => { if (imageUrl) URL.revokeObjectURL(imageUrl); }, [imageUrl]);
+  useEffect(() => { if (initialLotSlug) setLotSlug(initialLotSlug); }, [initialLotSlug]);
 
   const includedEntries = useMemo(() => entries.filter((entry) => entry.included), [entries]);
   const validation = useMemo(() => {
@@ -151,6 +155,7 @@ export default function ParkingLayoutApp() {
 
   const loadImage = (file) => {
     if (!file) return;
+    setImageFile(file);
     const nextUrl = URL.createObjectURL(file);
     const image = new Image();
     image.onload = () => {
@@ -161,6 +166,48 @@ export default function ParkingLayoutApp() {
     };
     image.onerror = () => { URL.revokeObjectURL(nextUrl); setError("Could not read that image file."); };
     image.src = nextUrl;
+  };
+
+  const generateCandidates = async () => {
+    if (!imageFile) { setError("Choose a parking image first."); return; }
+    if (!lotSlug) { setError("Choose the parking lot for this image."); return; }
+    setGenerating(true); setError(""); setNotice("");
+    try {
+      const bundle = await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}/candidates`, {
+        method: "POST", body: imageFile,
+      });
+      const imported = bundle.detector_candidates.map((candidate, index) => ({
+        id: candidate.stable_id || `detector-${candidate.candidate_id}`,
+        detectorCandidateId: candidate.candidate_id,
+        label: `Candidate ${candidate.candidate_id}`,
+        source: "detector",
+        className: candidate.class_name || "parking-space",
+        confidence: candidate.confidence,
+        polygon: clone(candidate.polygon),
+        slot_number: defaultName(index),
+        included: true,
+      }));
+      setEntries(imported); entriesRef.current = imported;
+      setPast([]); setFuture([]); setSourceCandidates(clone(bundle.detector_candidates));
+      setBundleDimensions({ width: bundle.image_width, height: bundle.image_height });
+      setSelectedId(imported[0]?.id ?? null);
+      setNotice(imported.length ? `Generated ${imported.length} candidates. Review the outlines, then download the JSON bundle or save the reviewed layout.` : "No parking spaces were detected. Try a clearer overview image or draw spaces manually.");
+    } catch (err) { setError(err.message || "Could not generate parking layout candidates."); }
+    finally { setGenerating(false); }
+  };
+
+  const downloadBundle = () => {
+    if (!dimensions || !sourceCandidates.length) return;
+    const bundle = {
+      format: "parking-layout-review-v1", lot_slug: lotSlug, camera_id: cameraId,
+      image_filename: imageFile?.name || "parking-layout-image",
+      image_width: dimensions.width, image_height: dimensions.height,
+      detector_candidates: sourceCandidates,
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = `${lotSlug}-${cameraId}-layout-review.json`; link.click();
+    URL.revokeObjectURL(url);
   };
 
   const importBundle = async (file) => {
@@ -204,9 +251,7 @@ export default function ParkingLayoutApp() {
   const loadSavedLayout = async () => {
     setError(""); setNotice("");
     try {
-      const response = await fetch(`${apiBase.replace(/\/$/, "")}/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}`);
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || `Load failed (${response.status})`);
+      const data = await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}`);
       const loaded = data.spaces.map((space) => ({
         id: `saved:${space.slot_number}`, detectorCandidateId: null, label: space.slot_number,
         source: "saved", className: "saved layout", polygon: clone(space.polygon),
@@ -324,6 +369,7 @@ export default function ParkingLayoutApp() {
   const saveLayout = async () => {
     setError(""); setNotice("");
     if (!dimensions) { setError("Choose the original image before saving so polygon bounds can be checked."); return; }
+    if (!imageFile) { setError("Choose the original reference photo again before saving this layout."); return; }
     const result = validateEntries(entriesRef.current, dimensions);
     if (result.errors.length) { setError(result.errors.join(" ")); return; }
     try {
@@ -332,12 +378,15 @@ export default function ParkingLayoutApp() {
         polygon: space.polygon.map(([x, y]) => [Math.round(x), Math.round(y)]),
       })) };
       const bounds = new URLSearchParams({ image_width: String(dimensions.width), image_height: String(dimensions.height) });
-      const response = await fetch(`${apiBase.replace(/\/$/, "")}/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}?${bounds}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(layout),
+      await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}?${bounds}`, {
+        method: "PUT", body: JSON.stringify(layout),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || `Save failed (${response.status})`);
-      setNotice(`Saved ${data.space_count} reviewed spaces for ${lotSlug} / ${cameraId}.`);
+      await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}/reference`, {
+        method: "POST", body: imageFile,
+      });
+      setNotice("");
+      setSavedToast(true);
+      window.setTimeout(() => setSavedToast(false), 2800);
     } catch (err) { setError(err.message || "Could not save the layout."); }
   };
 
@@ -351,6 +400,7 @@ export default function ParkingLayoutApp() {
       </header>
 
       <main className="workspace">
+        {savedToast && <div className="saved-toast" role="status">✓ <span>Layout and reference photo saved successfully</span></div>}
         <section className="intro-row">
           <div><p className="eyebrow">LAYOUT REVIEW</p><h1>Review parking spaces</h1><p className="subhead">Correct detector results against the source image, then save a camera-specific layout.</p></div>
           <div className="history-actions">
@@ -360,8 +410,7 @@ export default function ParkingLayoutApp() {
         </section>
 
         <section className="scope-card">
-          <label className="field api-field"><span>API server</span><input value={apiBase} onChange={(e) => setApiBase(e.target.value)} /></label>
-          <label className="field"><span>Parking lot</span><input value={lotSlug} onChange={(e) => setLotSlug(e.target.value)} placeholder="campus-west" /></label>
+          <label className="field"><span>Parking lot</span>{lots.length ? <select value={lotSlug} onChange={(e) => setLotSlug(e.target.value)}><option value="">Choose a parking lot</option>{lots.map((lot) => <option key={lot.lot_id} value={lot.slug}>{lot.name}</option>)}</select> : <input value={lotSlug} onChange={(e) => setLotSlug(e.target.value)} placeholder="campus-west" />}</label>
           <label className="field"><span>Camera ID</span><input value={cameraId} onChange={(e) => setCameraId(e.target.value)} placeholder="gate-a" /></label>
           <button className="button secondary load-button" onClick={loadSavedLayout}>Load saved layout</button>
         </section>
@@ -373,11 +422,11 @@ export default function ParkingLayoutApp() {
             <button className="button secondary" onClick={() => imageInput.current?.click()}>{imageUrl ? "Change image" : "Choose image"}</button>
           </div>
           <div className="import-card">
-            <div className="import-icon bundle">#</div><div className="import-copy"><strong>Detector candidates</strong><span>{sourceCandidates.length ? `${sourceCandidates.length} original predictions loaded` : "Import the JSON exported by test_layout.py"}</span></div>
-            <input ref={bundleInput} type="file" accept="application/json,.json" hidden onChange={(e) => importBundle(e.target.files?.[0])} />
-            <button className="button secondary" onClick={() => bundleInput.current?.click()}>Import candidates</button>
+            <div className="import-icon bundle">#</div><div className="import-copy"><strong>Generate layout JSON</strong><span>{sourceCandidates.length ? `${sourceCandidates.length} candidates ready to review` : "Run the parking-space detector on this image"}</span></div>
+            <button className="button primary" onClick={generateCandidates} disabled={!imageFile || !lotSlug || generating}>{generating ? "Detecting…" : "Generate candidates"}</button>
           </div>
         </section>
+        {sourceCandidates.length > 0 && <div className="bundle-actions"><span>Candidate bundle ready for {lotSlug}</span><button className="button secondary" onClick={downloadBundle}>Download JSON bundle</button></div>}
 
         {notice && <div className="notice" role="status"><span>✓</span>{notice}</div>}
         {error && <div className="error-banner" role="alert"><span>!</span>{error}</div>}

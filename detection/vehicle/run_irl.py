@@ -77,13 +77,6 @@ def estimate_frame_to_reference(reference, frame):
     return np.linalg.inv(reference_to_frame), inliers
 
 
-def update_api(updater, changes):
-    try:
-        updater.apply_changes(changes)
-    except Exception as error:
-        print(f"API update failed: {error}")
-
-
 def parse_args():
     env = dotenv_values(DETECTION_DIR / ".env")
     parser = argparse.ArgumentParser(
@@ -114,8 +107,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    args = parse_args()
+def run_video(args, on_frame=None, on_progress=None, stop_event=None):
     if args.frame_stride < 1:
         raise ValueError("--frame-stride must be at least 1")
     if args.inference_threads < 1:
@@ -195,6 +187,7 @@ def main():
     if not source_fps or source_fps <= 0:
         source_fps = 30.0
     fps = source_fps
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     output_path = args.output
     if output_path is None:
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -242,7 +235,6 @@ def main():
     overlay_mask = None
     detection_executor = ThreadPoolExecutor(max_workers=1)
     pending_detection = None
-    update_executor = ThreadPoolExecutor(max_workers=1) if updater is not None else None
     initial_snapshot_reported = False
 
     def accept_detection_result(future):
@@ -266,8 +258,8 @@ def main():
         _, overlay_mask = cv2.threshold(overlay_gray, 0, 255, cv2.THRESH_BINARY)
         if changes:
             print(f"Confirmed changes: {changes}")
-            if update_executor is not None:
-                update_executor.submit(update_api, updater, changes)
+            if updater is not None:
+                updater.apply_changes(changes)
         return changes
 
     overlay_frame = draw_overlay(
@@ -281,7 +273,7 @@ def main():
     _, overlay_mask = cv2.threshold(overlay_gray, 0, 255, cv2.THRESH_BINARY)
 
     try:
-        while frame is not None:
+        while frame is not None and not (stop_event is not None and stop_event.is_set()):
             detection_frame = cv2.warpPerspective(
                 frame,
                 source_to_reference,
@@ -312,6 +304,10 @@ def main():
             annotated = detection_frame.copy()
             cv2.copyTo(overlay_frame, overlay_mask, annotated)
             writer.write(annotated)
+            if on_frame is not None:
+                on_frame(annotated, source_frame_index + 1, total_frames)
+            if on_progress is not None:
+                on_progress(source_frame_index + 1, total_frames)
             if not args.no_preview:
                 preview_scale = min(1.0, 1280 / frame_width, 800 / frame_height)
                 preview = cv2.resize(
@@ -347,8 +343,9 @@ def main():
         video.release()
         writer.release()
         detection_executor.shutdown(wait=True)
-        if update_executor is not None:
-            update_executor.shutdown(wait=True)
+        if updater is not None:
+            updater.clear_lot_occupancy()
+            updater.close()
         if not args.no_preview:
             cv2.destroyAllWindows()
 
@@ -357,6 +354,11 @@ def main():
         f"skipped while inference was busy: {skipped_inferences}"
     )
     print(f"Annotated video saved to: {output_path}")
+    return output_path
+
+
+def main():
+    return run_video(parse_args())
 
 
 if __name__ == "__main__":

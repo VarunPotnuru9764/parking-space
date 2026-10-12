@@ -1,6 +1,8 @@
 import cv2
+import json
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from queue import Empty, Queue
 from threading import Condition, Thread
 
 class FrameStream:
@@ -8,12 +10,22 @@ class FrameStream:
         self._condition = Condition()
         self._latest_jpeg = None
         self._frame_number = 0
+        self._status = {"cars": [], "available_spaces": []}
+        self._commands = Queue()
         self._server = None
         self._thread = None
 
         stream = self
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
+                if self.path == "/status":
+                    body = json.dumps(stream.status()).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
                 if self.path != "/video":
                     self.send_error(404)
                     return
@@ -39,6 +51,22 @@ class FrameStream:
                 except (BrokenPipeError, ConnectionResetError):
                     pass
 
+            def do_POST(self):
+                if self.path == "/control/spawn":
+                    stream._commands.put(("spawn", None))
+                elif self.path.startswith("/control/leave?"):
+                    from urllib.parse import parse_qs, urlparse
+                    slot_number = parse_qs(urlparse(self.path).query).get("slot", [""])[0]
+                    if not slot_number:
+                        self.send_error(422, "slot is required")
+                        return
+                    stream._commands.put(("leave", slot_number))
+                else:
+                    self.send_error(404)
+                    return
+                self.send_response(202)
+                self.end_headers()
+
             def log_message(self, format, *args):
                 pass
 
@@ -51,7 +79,7 @@ class FrameStream:
         self._thread.start()
         return f"http://{self.host}:{self.port}/video"
 
-    def publish(self, frame):
+    def publish(self, frame, status=None):
         success, encoded = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         if not success:
             return
@@ -59,7 +87,21 @@ class FrameStream:
         with self._condition:
             self._latest_jpeg = encoded.tobytes()
             self._frame_number += 1
+            if status is not None:
+                self._status = status
             self._condition.notify_all()
+
+    def status(self):
+        with self._condition:
+            return dict(self._status)
+
+    def drain_commands(self):
+        commands = []
+        while True:
+            try:
+                commands.append(self._commands.get_nowait())
+            except Empty:
+                return commands
 
     def _next_frame(self, last_frame_number):
         with self._condition:
