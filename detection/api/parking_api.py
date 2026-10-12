@@ -1,14 +1,10 @@
-from pathlib import Path
-
 import requests
-from dotenv import dotenv_values
 
+from api.config import get_setting
 
 REQUEST_TIMEOUT_SECONDS = 10
-DETECTION_DIR = Path(__file__).resolve().parents[1]
-config = dotenv_values(DETECTION_DIR / ".env")
-DEFAULT_API_URL = config.get("API_URL") or "http://localhost:8000"
-DETECTION_API_TOKEN = config.get("DETECTION_API_TOKEN")
+DEFAULT_API_URL = get_setting("API_URL", "http://localhost:8000")
+DETECTION_API_TOKEN = get_setting("DETECTION_API_TOKEN")
 
 class ParkingAPI:
     def __init__(self, base_url=DEFAULT_API_URL):
