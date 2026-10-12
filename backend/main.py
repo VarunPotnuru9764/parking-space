@@ -1,12 +1,14 @@
 import asyncio
 import logging
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import Base, SessionLocal, engine
+from app.config import get_setting
 from app.models.users import User
 from app.models.parking import ParkingRecord
 from app.models.lots import ParkingLot
@@ -43,9 +45,18 @@ async def lifespan(app: FastAPI):
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(lifespan = lifespan)
+configured_origins = get_setting(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+allowed_origins = [
+    origin.strip().rstrip("/")
+    for origin in (configured_origins or "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-Detection-Token"],
@@ -89,3 +100,14 @@ app.include_router(simulator_detection_router)
 @app.get("/")
 def root():
     return {"message": "Parking Space Detection System API is running"}
+
+
+@app.get("/health/ready", tags=["Health"])
+def readiness():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        logging.warning("Readiness check failed because the database is unavailable")
+        raise HTTPException(status_code=503, detail="Database is unavailable") from exc
+    return {"status": "ready", "database": "available"}

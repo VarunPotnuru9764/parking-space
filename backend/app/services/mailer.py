@@ -1,20 +1,17 @@
-import os
 import smtplib
 import ssl
 from email.message import EmailMessage
 
-from dotenv import dotenv_values
-
-_config = dotenv_values(".env")
+from app.config import get_setting
 
 
 def email_delivery_configuration() -> tuple[str, int, str, str | None, str | None, bool]:
-    host = os.getenv("SMTP_HOST") or _config.get("SMTP_HOST")
-    sender = os.getenv("SMTP_FROM") or _config.get("SMTP_FROM")
-    username = os.getenv("SMTP_USERNAME") or _config.get("SMTP_USERNAME")
-    password = os.getenv("SMTP_PASSWORD") or _config.get("SMTP_PASSWORD")
-    port_value = os.getenv("SMTP_PORT") or _config.get("SMTP_PORT") or "587"
-    use_ssl = (os.getenv("SMTP_USE_SSL") or _config.get("SMTP_USE_SSL") or "").lower() == "true"
+    host = get_setting("SMTP_HOST")
+    sender = get_setting("SMTP_FROM")
+    username = get_setting("SMTP_USERNAME")
+    password = get_setting("SMTP_PASSWORD")
+    port_value = get_setting("SMTP_PORT", "587") or "587"
+    use_ssl = (get_setting("SMTP_USE_SSL", "") or "").lower() == "true"
     if not host or not sender or not port_value:
         raise RuntimeError("Email delivery is not configured. Set SMTP_HOST, SMTP_PORT and SMTP_FROM in backend/.env.")
     try:

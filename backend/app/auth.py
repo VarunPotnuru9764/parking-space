@@ -1,6 +1,5 @@
 import bcrypt
 from jose import JWTError, jwt
-from dotenv import dotenv_values
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
@@ -9,13 +8,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from secrets import compare_digest
 
 from app.database import get_db
+from app.config import get_required_setting, get_setting
 from app.models.users import User
 
 bearer_scheme = HTTPBearer()
 optional_bearer_scheme = HTTPBearer(auto_error=False)
-config = dotenv_values(".env")
-SECRET_KEY = config["SECRET_KEY"]
-DETECTION_API_TOKEN = config.get("DETECTION_API_TOKEN")
+SECRET_KEY = get_required_setting("SECRET_KEY")
+DETECTION_API_TOKEN = get_setting("DETECTION_API_TOKEN")
 ALGORITHM = "HS256"
 EXPTOKEN = 60
 

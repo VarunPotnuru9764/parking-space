@@ -1,15 +1,14 @@
 import hashlib
 import hmac
-import os
 import secrets
 from datetime import datetime, timedelta
-from dotenv import dotenv_values
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import SECRET_KEY, create_access_token, get_current_user, hash_password, verify_password
+from app.config import get_setting
 from app.database import get_db
 from app.models.audit import EmailChallenge, PasswordResetToken, UserSecurity
 from app.models.users import User
@@ -32,7 +31,6 @@ MAX_OTP_ATTEMPTS = 5
 RESET_REQUEST_RESPONSE = {
     "message": "If an account exists and email delivery succeeds, password reset instructions will be sent. This endpoint does not disclose whether the account exists."
 }
-_config = dotenv_values(".env")
 
 
 def _token_hash(token: str) -> str:
@@ -354,7 +352,7 @@ def request_password_reset(payload: PasswordResetRequest, request: Request, db: 
     )
     db.add(reset)
     db.commit()
-    frontend_url = os.getenv("FRONTEND_URL") or _config.get("FRONTEND_URL") or "http://localhost:5173/#/reset-password"
+    frontend_url = get_setting("FRONTEND_URL", "http://localhost:5173/#/reset-password")
     reset_url = f"{frontend_url}?token={token}"
     try:
         send_account_email(
