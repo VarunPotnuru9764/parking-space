@@ -16,6 +16,7 @@ from app.models.fares import FareRule
 from app.models.history import ParkingHistory
 from app.models.fare_history import FareHistory
 from app.models.audit import AuditEvent, EmailChallenge, PasswordResetToken, UserSecurity
+from app.models.detection_job import DetectionJob
 from app.routes.parking import router as parking_router
 from app.routes.claim import router as claim_router
 from app.routes.auth import router as auth_router

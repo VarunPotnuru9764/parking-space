@@ -29,3 +29,5 @@ opencv-python==5.0.0.93
 torch==2.14.1
 torchvision==0.29.1
 ultralytics==8.4.173
+google-auth>=2.30,<3
+requests>=2.31,<3

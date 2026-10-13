@@ -199,15 +199,85 @@ Fare rules are evaluated independently per lot. The scheduler records fare inter
 
 1. **Prepare Aiven MySQL.** Create the service, database, and a dedicated application user. Use the service host and port from Aiven, enable TLS, and use the provided CA certificate when configuring certificate verification. The backend SQLAlchemy URL uses the `mysql+pymysql` driver; URL-encode reserved characters in the username or password. Restrict Aiven's IP filter to the Render service's outbound IP ranges (or dedicated outbound IPs if configured). Take a backup before importing production data.
 2. **Prepare the schema and accounts.** For a new database, the backend creates missing tables when it starts. For an existing database, `create_all()` is not a migration: first develop and verify a schema/data migration against a copy. Provision the first administrator through a trusted operator process; public registration never grants admin access. Create the Simulator lot and its spaces if using simulator detection.
-3. **Create the Render API Web Service** from the repository with the repository root as its root directory. The root `.python-version` pins the service to Python 3.13.5 so the simulator's pinned Pygame release has a compatible Linux wheel. If the Render service has a `PYTHON_VERSION` environment variable, set it to `3.13.5` too because it takes precedence over `.python-version`. Build command: `bash scripts/render-build.sh`. This installs the backend ML stack in the API environment and the simulator dependencies in an isolated `simulator/venv`; the simulator launcher uses that environment when available. Start command: `cd backend && PYTHONPATH=.. uvicorn main:app --host 0.0.0.0 --port $PORT`. Set the health check path to `/health/ready`. Configure `DATABASE_URL`, `SECRET_KEY`, `DETECTION_API_TOKEN`, `CORS_ORIGINS`, and any SMTP settings in Render's environment controls. Detection uses an explicit `API_URL` if set, otherwise it uses Render's `RENDER_EXTERNAL_URL`; local runs fall back to `detection/.env` or `http://localhost:8000`. `DETECTION_API_TOKEN` must match the backend token. `CORS_ORIGINS` should contain the exact Vercel production origin, for example `https://your-app.vercel.app`, plus any custom domain. The health endpoint returns 503 until MySQL responds.
+3. **Create the Render API Web Service** from the repository with the repository root as its root directory. The root `.python-version` pins the service to Python 3.13.5 so the simulator's pinned Pygame release has a compatible Linux wheel. If the Render service has a `PYTHON_VERSION` environment variable, set it to `3.13.5` too because it takes precedence over `.python-version`. Build command: `bash scripts/render-build.sh`. This installs the backend ML stack in the API environment and the simulator dependencies in an isolated `simulator/venv`; the simulator launcher uses that environment when available. Start command: `cd backend && PYTHONPATH=.. uvicorn main:app --host 0.0.0.0 --port $PORT`. Set the health check path to `/health/ready`. Configure `DATABASE_URL`, `SECRET_KEY`, `DETECTION_API_TOKEN`, `CORS_ORIGINS`, and any SMTP settings in Render's environment controls. After creating the Cloud Run Job below, set `LAYOUT_DETECTION_MODE=cloud-run` and the four `CLOUD_RUN_*` / `GOOGLE_SERVICE_ACCOUNT_JSON` variables described below. Detection sync uses an explicit `API_URL` if set, otherwise it uses Render's `RENDER_EXTERNAL_URL`; local runs fall back to `detection/.env` or `http://localhost:8000`. `DETECTION_API_TOKEN` must match the backend token. `CORS_ORIGINS` should contain the exact Vercel production origin, for example `https://your-app.vercel.app`, plus any custom domain. The health endpoint returns 503 until MySQL responds.
 4. **Create the Vercel project** with `frontend/` as the project root, `npm run build` as the build command, and `dist` as the output directory. Set `VITE_API_BASE_URL` to the Render API's public HTTPS origin for Production and Preview as appropriate. Redeploy after changing environment variables. The app uses hash-based navigation, so application routes remain on the root browser path.
 5. **Verify staging end to end.** Check `/health/ready`, register a normal user, verify the browser can call the API without CORS errors, and exercise account and parking flows before using production data. Configure SMTP separately if password reset or MFA is needed.
 
-### Detection deployment boundary
+### Cloud Run layout-detection job
 
-The current video and simulator jobs run in threads inside the API process. The simulator itself runs as a subprocess using its isolated `simulator/venv`. Job state is held in process memory, and uploads, output videos, camera reference photos, and saved layouts use local filesystem paths. A restart loses active job state; Render's default filesystem is ephemeral. Do not deploy a separate worker and expect it to work with the current API: it would not share the job state or local files.
+Layout candidate inference runs as a separate Google Cloud Run Job so PyTorch and Ultralytics do not consume the Render API's memory. The API stores a temporary image and job status in the shared Aiven MySQL database, starts one Cloud Run Job execution, and the frontend polls the API for the result. On success, the API saves the camera reference image using its existing storage path. The job image contains `detection/models/parking_lot.pt`.
 
-For a reliable separate detection worker, first move job state to durable storage, add a queue between the API and worker, and put uploads/results/reference images in shared object storage. Then run inference in a private Render Background Worker with its own pinned Python and ML dependencies. Until then, keep detection as a single-service feature only if you accept its restart and storage limits, or defer using the detection pages for the initial release. Avoid scaling a service that owns active detection jobs to multiple instances.
+The API deployment creates the `layout_detection_jobs` table through `Base.metadata.create_all()`. Deploy the API code before trying the feature. The image is temporarily stored in MySQL until the result is fetched; failed jobs clear it, and completed/failed job records older than seven days are pruned when a new job is submitted. Keep uploads within the configured 20 MB limit. Local development defaults to `LAYOUT_DETECTION_MODE=local` (in-process inference); Render should explicitly use `cloud-run` after the job is configured.
+
+From Google Cloud Shell, choose a project and a region near the Aiven database, then set these shell variables:
+
+```bash
+export PROJECT_ID="your-gcp-project-id"
+export REGION="your-cloud-run-region"
+export IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/parking-space/detection-worker:v1"
+```
+
+Enable the required APIs and create an Artifact Registry Docker repository once:
+
+```bash
+gcloud config set project "$PROJECT_ID"
+gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com
+gcloud artifacts repositories create parking-space --repository-format=docker --location="$REGION"
+```
+
+Build the worker image from the repository root (Cloud Shell must have the repository checked out):
+
+```bash
+gcloud builds submit --tag "$IMAGE" --file detection/cloud_run/Dockerfile .
+```
+
+In Secret Manager, create a secret named `parking-space-database-url` containing the same MySQL `DATABASE_URL` used by the API. Do not put the URL in source control or paste it into chat. Create a runtime service account for the job and grant it `roles/secretmanager.secretAccessor` on that secret:
+
+```bash
+gcloud iam service-accounts create parking-detection-worker
+gcloud secrets add-iam-policy-binding parking-space-database-url \
+  --member="serviceAccount:parking-detection-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+Then create the job:
+
+```bash
+gcloud run jobs create parking-detection-worker \
+  --image "$IMAGE" \
+  --region "$REGION" \
+  --cpu 2 \
+  --memory 4Gi \
+  --task-timeout 15m \
+  --max-retries 0 \
+  --service-account "parking-detection-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --set-secrets "DATABASE_URL=parking-space-database-url:latest"
+```
+
+Create a separate service account for the Render API to invoke the job with per-execution argument overrides. Grant it `roles/run.developer` on `parking-detection-worker`, create a JSON key outside the repository, and store its complete JSON contents in Render as `GOOGLE_SERVICE_ACCOUNT_JSON`:
+
+```bash
+gcloud iam service-accounts create render-job-trigger
+gcloud run jobs add-iam-policy-binding parking-detection-worker \
+  --region "$REGION" \
+  --member="serviceAccount:render-job-trigger@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/run.developer"
+gcloud iam service-accounts keys create "$HOME/render-job-trigger.json" \
+  --iam-account="render-job-trigger@${PROJECT_ID}.iam.gserviceaccount.com"
+```
+
+Treat that key like a password: do not commit it or share it. Set these additional Render API environment variables and redeploy:
+
+```text
+CLOUD_RUN_PROJECT_ID=your-gcp-project-id
+CLOUD_RUN_REGION=your-cloud-run-region
+CLOUD_RUN_DETECTION_JOB=parking-detection-worker
+GOOGLE_SERVICE_ACCOUNT_JSON=<service-account JSON stored as a secret>
+```
+
+Allow the Cloud Run Job to reach the Aiven MySQL host through Aiven's IP allowlist. Cloud Run's default outbound IPs can change; for a restricted allowlist, configure static outbound IP through a VPC connector and Cloud NAT, or use an Aiven-supported private connectivity option.
+
+The Cloud Run Job is configured for 2 vCPU, 4 GiB RAM, a 15-minute task timeout, and no automatic retries. Adjust resources after checking execution logs and metrics. The video and simulator detection paths remain in the Render API deployment and have their own process/filesystem behavior; this Cloud Run integration moves **layout candidate generation** only.
 
 ## Development checks
 

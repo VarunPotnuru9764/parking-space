@@ -1,16 +1,21 @@
 import asyncio
+import json
+import logging
+import os
 import re
 import sys
-from functools import lru_cache
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from threading import Lock
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from app.auth import require_admin
 from app.models.users import User
+from app.models.detection_job import DetectionJob
 from app.database import get_db
 from app.services.audit import record_event
+from app.services.cloud_run_jobs import execute_layout_detection
 from sqlalchemy.orm import Session
 from app.models.lots import ParkingLot
 
@@ -19,19 +24,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from detection.layout.layout_manager import LAYOUT_FILE, load_layout, save_layout, validate_layout
-from detection.layout.pretrained_layout_detector import PretrainedParkingSpaceDetector
 
 router = APIRouter(prefix="/layouts", tags=["Parking layouts"])
 _SCOPE_PART = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$")
 MAX_LAYOUT_IMAGE_BYTES = 20 * 1024 * 1024
-MODEL_PATH = PROJECT_ROOT / "detection" / "models" / "parking_lot.pt"
 LAYOUT_ROOT = PROJECT_ROOT / "detection" / "layout" / "layouts"
-_detector_lock = Lock()
-
-
-@lru_cache(maxsize=1)
-def _candidate_detector():
-    return PretrainedParkingSpaceDetector(MODEL_PATH, confidence=0.25)
+LOGGER = logging.getLogger(__name__)
 
 
 def _validate_scope(lot_slug: str, camera_id: str):
@@ -63,7 +61,7 @@ class LayoutPayload(BaseModel):
     spaces: list[LayoutSpace] = Field(min_length=1)
 
 
-@router.post("/{lot_slug}/{camera_id}/candidates")
+@router.post("/{lot_slug}/{camera_id}/candidates", status_code=status.HTTP_202_ACCEPTED)
 async def generate_layout_candidates(
     lot_slug: str,
     camera_id: str,
@@ -71,7 +69,7 @@ async def generate_layout_candidates(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Run the configured parking-space model and return an editor review bundle."""
+    """Queue parking-space inference on the configured Cloud Run Job."""
     _validate_scope(lot_slug, camera_id)
     lot = db.query(ParkingLot).filter(ParkingLot.slug == lot_slug).first()
     if lot is None:
@@ -87,52 +85,107 @@ async def generate_layout_candidates(
     request_body = await request.body()
     if len(request_body) > MAX_LAYOUT_IMAGE_BYTES:
         raise HTTPException(status_code=413, detail="Image must be 20 MB or smaller")
-    try:
-        import cv2
-        import numpy as np
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="Layout inference is not installed on the backend. Install the updated backend requirements and restart it.",
-        ) from exc
+    import cv2
+    import numpy as np
+
     image = cv2.imdecode(np.frombuffer(request_body, dtype=np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise HTTPException(status_code=422, detail="Could not decode the uploaded image")
+    del image
 
-    try:
-        candidates = await asyncio.to_thread(_run_candidate_detection, image)
-    except (RuntimeError, FileNotFoundError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail=f"Could not generate layout candidates: {exc}") from exc
+    expiry = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=7)
+    db.query(DetectionJob).filter(DetectionJob.created_at < expiry).delete(synchronize_session=False)
 
-    _save_reference_photo(lot_slug, camera_id, content_type, request_body)
-
-    record_event(
-        db,
-        request,
-        "layout.candidates_generated",
-        f"Generated {len(candidates)} layout candidates for {lot_slug}/{camera_id}.",
-        current_user.user_id,
+    job = DetectionJob(
+        job_id=str(uuid4()),
+        user_id=current_user.user_id,
+        lot_slug=lot_slug,
+        camera_id=camera_id,
+        content_type=content_type,
+        image_data=request_body,
+        status="queued",
     )
+    db.add(job)
     db.commit()
-    return {
-        "format": "parking-layout-review-v1",
-        "lot_slug": lot_slug,
-        "camera_id": camera_id,
-        "image_width": int(image.shape[1]),
-        "image_height": int(image.shape[0]),
-        "detector_candidates": [
-            {
-                "candidate_id": int(candidate["candidate_id"]),
-                "stable_id": f"detector-{candidate['candidate_id']}",
-                "polygon": candidate["polygon"],
-                "confidence": candidate.get("confidence"),
-                "class_name": candidate.get("class_name"),
-            }
-            for candidate in candidates
-        ],
-    }
+
+    mode = os.environ.get(
+        "LAYOUT_DETECTION_MODE",
+        "cloud-run" if os.environ.get("RENDER_EXTERNAL_URL") else "local",
+    ).strip().lower()
+    try:
+        if mode == "local":
+            from app.detection_worker import process_job
+
+            await asyncio.to_thread(process_job, job.job_id)
+        elif mode == "cloud-run":
+            execute_layout_detection(job.job_id)
+        else:
+            raise RuntimeError("LAYOUT_DETECTION_MODE must be 'local' or 'cloud-run'")
+    except Exception as exc:
+        LOGGER.exception("Could not start layout detection job %s", job.job_id)
+        job.status = "failed"
+        job.error = str(exc)[:2000]
+        job.image_data = None
+        job.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.add(job)
+        db.commit()
+        if mode == "local":
+            return {"job_id": job.job_id, "status": "failed"}
+        raise HTTPException(
+            status_code=503,
+            detail="Could not start the Cloud Run detection job. Check the API service's Cloud Run settings and logs.",
+        ) from exc
+
+    record_event(db, request, "layout.detection_queued", f"Queued layout detection for {lot_slug}/{camera_id}.", current_user.user_id)
+    db.commit()
+    return {"job_id": job.job_id, "status": "queued"}
+
+
+@router.get("/detection-jobs/{job_id}")
+def get_layout_detection_job(
+    job_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Return the status/result for a detection job owned by the current admin."""
+    job = db.query(DetectionJob).filter(
+        DetectionJob.job_id == job_id,
+        DetectionJob.user_id == current_user.user_id,
+    ).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Detection job not found")
+
+    started = job.started_at or job.created_at
+    if job.status in {"queued", "running"} and started is not None:
+        # Treat a worker terminated by an OOM or platform interruption as failed
+        # after a generous bound; the Cloud Run task itself is capped at 15 min.
+        age = (datetime.now(timezone.utc).replace(tzinfo=None) - started.replace(tzinfo=None)).total_seconds()
+        if age > 20 * 60:
+            job.status = "failed"
+            job.error = "Detection did not finish. Check the Cloud Run Job execution logs."
+            job.image_data = None
+            job.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.commit()
+
+    bundle = json.loads(job.result_json) if job.status == "succeeded" and job.result_json else None
+    if bundle is not None and job.image_data:
+        _save_reference_photo(job.lot_slug, job.camera_id, job.content_type, bytes(job.image_data))
+        job.image_data = None
+        db.commit()
+
+    if job.status == "succeeded" and not job.completion_logged:
+        record_event(
+            db,
+            request,
+            "layout.candidates_generated",
+            f"Generated {len(bundle.get('detector_candidates', [])) if bundle else 0} layout candidates for {job.lot_slug}/{job.camera_id}.",
+            current_user.user_id,
+        )
+        job.completion_logged = True
+        db.commit()
+
+    return {"job_id": job.job_id, "status": job.status, "bundle": bundle, "error": job.error}
 
 
 @router.post("/{lot_slug}/{camera_id}/reference")
@@ -179,11 +232,6 @@ async def save_camera_reference(
     )
     db.commit()
     return {"saved": True, "lot_slug": lot_slug, "camera_id": camera_id}
-
-
-def _run_candidate_detection(image):
-    with _detector_lock:
-        return _candidate_detector().detect(image)
 
 
 @router.get("/{lot_slug}")

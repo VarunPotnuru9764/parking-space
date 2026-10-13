@@ -173,9 +173,25 @@ export default function ParkingLayoutApp({ initialLotSlug, lots = [] }) {
     if (!lotSlug) { setError("Choose the parking lot for this image."); return; }
     setGenerating(true); setError(""); setNotice("");
     try {
-      const bundle = await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}/candidates`, {
+      const queued = await apiRequest(`/layouts/${encodeURIComponent(lotSlug)}/${encodeURIComponent(cameraId)}/candidates`, {
         method: "POST", body: imageFile,
       });
+      const deadline = Date.now() + 20 * 60 * 1000;
+      let bundle = null;
+      while (Date.now() < deadline) {
+        setNotice("Detection is queued on Google Cloud Run…");
+        const job = await apiRequest(`/layouts/detection-jobs/${encodeURIComponent(queued.job_id)}`);
+        if (job.status === "succeeded") {
+          bundle = job.bundle;
+          break;
+        }
+        if (job.status === "failed") {
+          throw new Error(job.error || "The detection worker failed. Check its Cloud Run execution logs.");
+        }
+        setNotice(job.status === "running" ? "The parking-space model is analyzing the image…" : "Waiting for a Cloud Run worker…");
+        await new Promise((resolve) => window.setTimeout(resolve, 3000));
+      }
+      if (!bundle) throw new Error("Detection is taking longer than expected. Check the Cloud Run Job execution logs.");
       const imported = bundle.detector_candidates.map((candidate, index) => ({
         id: candidate.stable_id || `detector-${candidate.candidate_id}`,
         detectorCandidateId: candidate.candidate_id,
