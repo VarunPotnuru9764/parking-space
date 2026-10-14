@@ -15,7 +15,7 @@ import numpy as np
 from dotenv import dotenv_values
 
 from api.occupancy_updater import OccupancyUpdater
-from layout.layout_manager import load_layout
+from layout.layout_manager import load_layout, validate_layout
 from layout.layout_sync import synchronize_layout
 from vehicle.occupancy_pipeline import OccupancyPipeline
 from vehicle.run_simulator import draw_overlay
@@ -77,6 +77,14 @@ def estimate_frame_to_reference(reference, frame):
     return np.linalg.inv(reference_to_frame), inliers
 
 
+def resolve_video_layout(lot_slug, camera_id, layout_override=None):
+    """Use a captured reviewed layout when provided, otherwise preserve local loading."""
+    if layout_override is None:
+        return load_layout(lot_slug, camera_id)
+    validate_layout(layout_override)
+    return layout_override
+
+
 def parse_args():
     env = dotenv_values(DETECTION_DIR / ".env")
     parser = argparse.ArgumentParser(
@@ -107,7 +115,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def run_video(args, on_frame=None, on_progress=None, stop_event=None):
+def run_video(args, on_frame=None, on_progress=None, stop_event=None, layout_override=None):
     if args.frame_stride < 1:
         raise ValueError("--frame-stride must be at least 1")
     if args.inference_threads < 1:
@@ -126,7 +134,9 @@ def run_video(args, on_frame=None, on_progress=None, stop_event=None):
         if not path.is_file():
             raise FileNotFoundError(f"Could not find {description}: {path}")
 
-    layout = load_layout(args.lot, args.camera)
+    # Cloud workers pass the exact reviewed layout snapshot captured at upload
+    # time. Local callers keep loading the current saved layout as before.
+    layout = resolve_video_layout(args.lot, args.camera, layout_override)
     reference = cv2.imread(str(reference_path))
     if reference is None:
         raise ValueError(f"Could not read layout reference image: {reference_path}")

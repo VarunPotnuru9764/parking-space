@@ -3,6 +3,12 @@ import threading
 import uuid
 from argparse import Namespace
 from pathlib import Path
+from datetime import datetime, timezone
+
+from sqlalchemy.exc import IntegrityError
+
+from app.database import SessionLocal
+from app.models.video_detection_job import VideoDetectionJob, VideoDetectionSlot
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -167,3 +173,142 @@ class VideoDetectionJobs:
 
 
 video_detection_jobs = VideoDetectionJobs()
+
+
+def cloud_video_detection_enabled() -> bool:
+    """Use Cloud Run on Render; retain the local worker for development."""
+    import os
+    return bool(os.environ.get("RENDER_EXTERNAL_URL"))
+
+
+def _job_payload(job: VideoDetectionJob) -> dict:
+    return {
+        "job_id": job.job_id,
+        "lot_slug": job.lot_slug,
+        "camera_id": job.camera_id,
+        "status": job.status,
+        "message": job.message,
+        "error": job.error,
+        "frame_number": job.frame_number,
+        "total_frames": job.total_frames,
+        "has_frame": bool(job.frame_available),
+        "has_result": job.status in {"completed", "stopped"} and bool(job.result_object),
+    }
+
+
+def _expire_stale_video_jobs(db, now=None) -> int:
+    now = now or datetime.now(timezone.utc)
+    jobs = db.query(VideoDetectionJob).filter(
+        VideoDetectionJob.status.in_(("queued", "running"))
+    ).all()
+    expired = 0
+    for job in jobs:
+        baseline = job.updated_at or job.started_at or job.created_at
+        stale_after = 15 * 60 if job.status == "queued" else 3 * 60 * 60
+        if baseline:
+            baseline = baseline.replace(tzinfo=timezone.utc) if baseline.tzinfo is None else baseline
+        if baseline and (now - baseline).total_seconds() > stale_after:
+            job.status = "failed"
+            job.message = "Video detection timed out"
+            job.error = "No worker update was received before the job timeout"
+            job.finished_at = now.replace(tzinfo=None)
+            job.updated_at = job.finished_at
+            expired += 1
+    if expired:
+        db.commit()
+    return expired
+
+
+def get_persistent_video_job(db, job_id: str, user_id: int):
+    _expire_stale_video_jobs(db)
+    job = db.query(VideoDetectionJob).filter(
+        VideoDetectionJob.job_id == job_id,
+        VideoDetectionJob.user_id == user_id,
+    ).first()
+    return _job_payload(job) if job else None
+
+
+def has_active_video_job(db=None) -> bool:
+    own_session = db is None
+    db = db or SessionLocal()
+    try:
+        _expire_stale_video_jobs(db)
+        return video_detection_jobs.has_active_job() or db.query(VideoDetectionJob.job_id).filter(
+            VideoDetectionJob.status.in_(("queued", "running"))
+        ).first() is not None
+    finally:
+        if own_session:
+            db.close()
+
+
+def _lock_video_slot(db) -> None:
+    slot = db.query(VideoDetectionSlot).filter(VideoDetectionSlot.slot_id == 1).with_for_update().first()
+    if slot is None:
+        try:
+            db.add(VideoDetectionSlot(slot_id=1))
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            db.query(VideoDetectionSlot).filter(VideoDetectionSlot.slot_id == 1).with_for_update().first()
+
+
+def start_cloud_video_detection(db, *, user_id: int, video_path: Path, byte_count: int,
+                                lot_slug: str, camera_id: str, content_type: str,
+                                layout: dict, reference_path: Path) -> dict:
+    from app.services import cloud_storage, cloud_run_jobs
+    import json
+
+    job_id = str(uuid.uuid4())
+    prefix = f"video-jobs/{job_id}"
+    suffix = video_path.suffix.lower().lstrip(".")
+    objects = {
+        "input": f"{prefix}/input.{suffix}",
+        "layout": f"{prefix}/layout.json",
+        "reference": f"{prefix}/reference{reference_path.suffix.lower()}",
+        "frame": f"{prefix}/preview.jpg",
+        "result": f"{prefix}/result.mp4",
+    }
+    cloud_storage.upload_file(objects["input"], content_type, video_path, byte_count)
+    cloud_storage.upload_bytes(objects["layout"], "application/json", json.dumps(layout, separators=(",", ":")).encode())
+    cloud_storage.upload_file(objects["reference"], "image/" + reference_path.suffix.lower().lstrip("."),
+                              reference_path, reference_path.stat().st_size)
+    _lock_video_slot(db)
+    if db.query(VideoDetectionJob.job_id).filter(
+        VideoDetectionJob.status.in_(("queued", "running"))
+    ).first() is not None:
+        db.rollback()
+        raise RuntimeError("Another video detection is already running")
+    job = VideoDetectionJob(
+        job_id=job_id, user_id=user_id, lot_slug=lot_slug, camera_id=camera_id,
+        content_type=content_type, status="queued", message="Waiting for a Cloud Run worker",
+        input_object=objects["input"], layout_object=objects["layout"],
+        reference_object=objects["reference"], frame_object=objects["frame"],
+        result_object=objects["result"],
+    )
+    db.add(job)
+    db.commit()
+    try:
+        cloud_run_jobs.execute_video_detection(job_id)
+    except Exception as exc:
+        job.status = "failed"
+        job.message = "Video detection could not be started"
+        job.error = "Cloud Run could not start the video worker; inspect trigger service logs"
+        job.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        job.updated_at = job.finished_at
+        db.commit()
+        raise RuntimeError("Could not start the Cloud Run video worker") from exc
+    return _job_payload(job)
+
+
+def stop_persistent_video_job(db, job_id: str, user_id: int):
+    job = db.query(VideoDetectionJob).filter(
+        VideoDetectionJob.job_id == job_id,
+        VideoDetectionJob.user_id == user_id,
+    ).first()
+    if job is None:
+        return None
+    if job.status in {"queued", "running"}:
+        job.cancel_requested = True
+        job.message = "Stopping detection and clearing parking occupancy"
+        db.commit()
+    return _job_payload(job)

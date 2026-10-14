@@ -8,7 +8,7 @@ from app.models.lots import ParkingLot
 from app.models.users import User
 from app.services.audit import record_event
 from app.services.simulator_detection import simulator_detection_jobs
-from app.services.video_detection import video_detection_jobs
+from app.services.video_detection import has_active_video_job
 from detection.layout.layout_manager import load_layout
 
 
@@ -28,7 +28,7 @@ def start_simulator_detection(
         load_layout("simulator", "default")
     except (FileNotFoundError, ValueError) as exc:
         raise HTTPException(status_code=409, detail=f"The Simulator lot needs a valid default layout: {exc}") from exc
-    if video_detection_jobs.has_active_job():
+    if has_active_video_job(db):
         raise HTTPException(status_code=409, detail="Stop the current video detection before starting simulator detection")
     try:
         job = simulator_detection_jobs.start()
