@@ -11,8 +11,8 @@ class FareRuleCreate(BaseModel):
     base_rate: float = Field(gt=0)
     min_occupancy: float = Field(ge=0, le=100)
     max_occupancy: float = Field(ge=0, le=100)
-    occupancy_multiplier: float = Field(gt=0)
-    peak_multiplier: float = Field(default=1, gt=0)
+    occupancy_multiplier: float = Field(ge=1)
+    peak_multiplier: float = Field(default=1, ge=1)
     start_time: time | None = None
     end_time: time | None = None
     @model_validator(mode="after")
@@ -29,8 +29,8 @@ class FareRuleUpdate(BaseModel):
     base_rate: float | None = Field(default=None, gt=0)
     min_occupancy: float | None = Field(default=None, ge=0, le=100)
     max_occupancy: float | None = Field(default=None, ge=0, le=100)
-    occupancy_multiplier: float | None = Field(default=None, gt=0)
-    peak_multiplier: float | None = Field(default=None, gt=0)
+    occupancy_multiplier: float | None = Field(default=None, ge=1)
+    peak_multiplier: float | None = Field(default=None, ge=1)
     start_time: time | None = None
     end_time: time | None = None
     active: bool | None = None

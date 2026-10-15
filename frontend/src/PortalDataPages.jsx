@@ -56,56 +56,58 @@ function DateFilters({ startDate, endDate, setStartDate, setEndDate }) {
   </>;
 }
 
-function exportPdf(filename, title, sections) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    window.alert("Allow pop-ups for this site to export the PDF.");
-    return;
-  }
-  const escapeHtml = (value) => String(value ?? "—").replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;",
-  })[character]);
-  const tables = sections.map((section) => `
-    <section>
-      <h2>${escapeHtml(section.title)}</h2>
-      <table>
-        <thead><tr>${section.columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead>
-        <tbody>${section.rows.map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody>
-      </table>
-    </section>`).join("");
-  printWindow.document.write(`<!doctype html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <title>${escapeHtml(filename.replace(/\.pdf$/i, ""))}</title>
-        <style>
-          @page { size: landscape; margin: 16mm; }
-          body { color: #172b2a; font: 12px Arial, sans-serif; }
-          header { border-bottom: 2px solid #128b72; margin-bottom: 24px; padding-bottom: 12px; }
-          h1 { font-size: 22px; margin: 0 0 6px; }
-          header p { color: #657775; margin: 0; }
-          section { margin: 0 0 24px; break-inside: avoid; }
-          h2 { color: #147c69; font-size: 15px; margin: 0 0 8px; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #d8e2df; padding: 7px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
-          th { background: #edf5f2; color: #23413d; }
-          tr { break-inside: avoid; }
-          footer { color: #657775; font-size: 10px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <header><h1>${escapeHtml(title)}</h1><p>ParkingSpace · Generated ${escapeHtml(new Date().toLocaleString())}</p></header>
-        ${tables}
-        <footer>ParkingSpace report. Recorded fares are not payment confirmations.</footer>
-      </body>
-    </html>`);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.setTimeout(() => printWindow.print(), 250);
+async function exportPdf(filename, title, sections) {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 14;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(18);
+  pdf.setTextColor(23, 43, 42);
+  pdf.text(title, margin, 17);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.setTextColor(101, 119, 117);
+  pdf.text(`ParkingSpace | Generated ${new Date().toLocaleString()}`, margin, 23);
+  pdf.setDrawColor(18, 139, 114);
+  pdf.setLineWidth(0.7);
+  pdf.line(margin, 27, pageWidth - margin, 27);
+
+  let startY = 33;
+  sections.forEach((section) => {
+    if (startY > pageHeight - 30) {
+      pdf.addPage();
+      startY = margin;
+    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(20, 124, 105);
+    pdf.text(section.title, margin, startY);
+    autoTable(pdf, {
+      startY: startY + 3,
+      head: [section.columns],
+      body: section.rows.map((row) => row.map((value) => String(value ?? "—").replace("₹", "INR "))),
+      margin: { left: margin, right: margin, bottom: 15 },
+      styles: { font: "helvetica", fontSize: 8, cellPadding: 2.5, overflow: "linebreak" },
+      headStyles: { fillColor: [237, 245, 242], textColor: [35, 65, 61], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 251, 250] },
+      didDrawPage: () => {
+        const pageNumber = pdf.internal.getCurrentPageInfo().pageNumber;
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(101, 119, 117);
+        pdf.text("ParkingSpace report | Recorded fares are not payment confirmations.", margin, pageHeight - 7);
+        pdf.text(String(pageNumber), pageWidth - margin, pageHeight - 7, { align: "right" });
+      },
+    });
+    startY = pdf.lastAutoTable.finalY + 10;
+  });
+
+  pdf.save(filename);
 }
 
 function MetricCard({ label, value, hint }) {
@@ -329,7 +331,12 @@ export function FareRulesPage({ lots = [], lotId = "" }) {
   const submit = async (event) => {
     event.preventDefault();
     if (!selectedLot) return;
-    setBusy(true); setError(""); setMessage("");
+    setError(""); setMessage("");
+    if (Number(form.occupancy_multiplier) < 1 || Number(form.peak_multiplier) < 1) {
+      setError("Occupancy and peak multipliers must be at least 1.");
+      return;
+    }
+    setBusy(true);
     const payload = {
       rule_name: form.rule_name.trim(),
       base_rate: Number(form.base_rate),
@@ -360,8 +367,8 @@ export function FareRulesPage({ lots = [], lotId = "" }) {
         <label>Base rate / hour<input required type="number" min="0.01" step="0.01" value={form.base_rate} onChange={(event) => setForm({ ...form, base_rate: event.target.value })} /></label>
         <label>Minimum occupancy %<input required type="number" min="0" max="100" step="0.01" value={form.min_occupancy} onChange={(event) => setForm({ ...form, min_occupancy: event.target.value })} /></label>
         <label>Maximum occupancy %<input required type="number" min="0" max="100" step="0.01" value={form.max_occupancy} onChange={(event) => setForm({ ...form, max_occupancy: event.target.value })} /></label>
-        <label>Occupancy multiplier<input required type="number" min="0.01" step="0.01" value={form.occupancy_multiplier} onChange={(event) => setForm({ ...form, occupancy_multiplier: event.target.value })} /></label>
-        <label>Peak multiplier<input required type="number" min="0.01" step="0.01" value={form.peak_multiplier} onChange={(event) => setForm({ ...form, peak_multiplier: event.target.value })} /></label>
+        <label>Occupancy multiplier<input required type="number" min="1" step="0.01" value={form.occupancy_multiplier} onChange={(event) => setForm({ ...form, occupancy_multiplier: event.target.value })} /><small className="form-help">Must be 1 or greater.</small></label>
+        <label>Peak multiplier<input required type="number" min="1" step="0.01" value={form.peak_multiplier} onChange={(event) => setForm({ ...form, peak_multiplier: event.target.value })} /><small className="form-help">Must be 1 or greater.</small></label>
         <label>Peak start time<input type="time" value={form.start_time} onChange={(event) => setForm({ ...form, start_time: event.target.value })} /></label>
         <label>Peak end time<input type="time" value={form.end_time} onChange={(event) => setForm({ ...form, end_time: event.target.value })} /></label>
       </div><div className="fare-form-actions"><button className="button button-primary" disabled={busy || !selectedLot}>{busy ? "Saving…" : editing ? "Save changes" : "Create rule"}</button>{editing && <button type="button" className="button button-outline" onClick={() => { setEditing(null); setForm(emptyRule); }}>Cancel edit</button>}</div></form>
