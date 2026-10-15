@@ -56,15 +56,56 @@ function DateFilters({ startDate, endDate, setStartDate, setEndDate }) {
   </>;
 }
 
-function exportCsv(filename, columns, rows) {
-  const quote = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
-  const content = [columns.map((column) => quote(column.label)).join(","), ...rows.map((row) => row.values.map(quote).join(","))].join("\r\n");
-  const url = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
+function exportPdf(filename, title, sections) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    window.alert("Allow pop-ups for this site to export the PDF.");
+    return;
+  }
+  const escapeHtml = (value) => String(value ?? "—").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[character]);
+  const tables = sections.map((section) => `
+    <section>
+      <h2>${escapeHtml(section.title)}</h2>
+      <table>
+        <thead><tr>${section.columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead>
+        <tbody>${section.rows.map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table>
+    </section>`).join("");
+  printWindow.document.write(`<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(filename.replace(/\.pdf$/i, ""))}</title>
+        <style>
+          @page { size: landscape; margin: 16mm; }
+          body { color: #172b2a; font: 12px Arial, sans-serif; }
+          header { border-bottom: 2px solid #128b72; margin-bottom: 24px; padding-bottom: 12px; }
+          h1 { font-size: 22px; margin: 0 0 6px; }
+          header p { color: #657775; margin: 0; }
+          section { margin: 0 0 24px; break-inside: avoid; }
+          h2 { color: #147c69; font-size: 15px; margin: 0 0 8px; }
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #d8e2df; padding: 7px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+          th { background: #edf5f2; color: #23413d; }
+          tr { break-inside: avoid; }
+          footer { color: #657775; font-size: 10px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <header><h1>${escapeHtml(title)}</h1><p>ParkingSpace · Generated ${escapeHtml(new Date().toLocaleString())}</p></header>
+        ${tables}
+        <footer>ParkingSpace report. Recorded fares are not payment confirmations.</footer>
+      </body>
+    </html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.setTimeout(() => printWindow.print(), 250);
 }
 
 function MetricCard({ label, value, hint }) {
@@ -115,9 +156,9 @@ export function SessionHistoryPage({ lots = [] }) {
   useEffect(() => { load(); }, [load]);
   const columns = [{ label: "LOT" }, { label: "SPACE" }, { label: "ARRIVAL RECORDED" }, { label: "DEPARTURE" }, { label: "DURATION" }, { label: "AVERAGE RATE" }, { label: "RECORDED FARE" }];
   const rows = data.items.map((item) => ({ key: item.history_id, cells: [item.parking_lot, item.space_id, formatDate(item.recorded_start), formatDate(item.departure_time), `${Number(item.duration_hours || 0).toFixed(2)} hr`, money(item.average_rate), money(item.recorded_fare)] }));
-  const csvRows = data.items.map((item) => ({ values: [item.parking_lot, item.space_id, item.recorded_start, item.departure_time, item.duration_hours, item.average_rate, item.recorded_fare] }));
+  const exportRows = data.items.map((item) => [item.parking_lot, item.space_id, formatDate(item.recorded_start), formatDate(item.departure_time), `${Number(item.duration_hours || 0).toFixed(2)} hr`, money(item.average_rate), money(item.recorded_fare)]);
   return <div className="page-stack">
-    <PageHeading eyebrow="YOUR PARKING" title="Parking history" description="Only sessions associated with your account are shown. Recorded starts may reflect first detector observation." action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportCsv("my-parking-history.csv", columns, csvRows)}>Export CSV</button>} />
+    <PageHeading eyebrow="YOUR PARKING" title="Parking history" description="Only sessions associated with your account are shown. Recorded starts may reflect first detector observation." action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportPdf("my-parking-history.pdf", "Parking history", [{ title: "Parking sessions", columns: columns.map((column) => column.label), rows: exportRows }])}>Export PDF</button>} />
     <section className="panel"><FilterBar onSubmit={() => setApplied(filters)}>
       <label className="table-search"><span>⌕</span><input value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} placeholder="Search space…" /></label>
       <label className="report-filter-field">Parking lot<select value={filters.lot_id} onChange={(event) => setFilters({ ...filters, lot_id: event.target.value })}><option value="">All lots</option>{lots.map((lot) => <option key={lot.lot_id} value={lot.lot_id}>{lot.name}</option>)}</select></label>
@@ -147,7 +188,6 @@ function ReportsPage({ admin, lots = [], lotId = "" }) {
   const sessions = report?.sessions || [];
   const columns = [{ label: "LOT" }, { label: "SPACE" }, { label: "ARRIVAL RECORDED" }, { label: "DEPARTURE" }, { label: "DURATION" }, { label: "RECORDED FARE" }];
   const rows = sessions.map((item) => ({ key: item.history_id, cells: [item.parking_lot, item.space_id, formatDate(item.recorded_start), formatDate(item.departure_time), `${Number(item.duration_hours || 0).toFixed(2)} hr`, money(item.recorded_fare)] }));
-  const csvRows = sessions.map((item) => ({ values: [item.parking_lot, item.space_id, item.recorded_start, item.departure_time, item.duration_hours, item.recorded_fare] }));
   const chartItems = report?.activity_over_time || [];
   const metrics = admin ? [
     ["Parking lots", report?.total_lots ?? "—", "Configured lots"],
@@ -162,8 +202,15 @@ function ReportsPage({ admin, lots = [], lotId = "" }) {
     ["Recorded charges", money(report?.total_recorded_charges), "Not payment confirmations"],
   ];
   const chartLabel = admin ? "Sessions by day" : "Your sessions by day";
+  const reportSections = [
+    { title: "Report summary", columns: ["Metric", "Value", "Details"], rows: metrics.map(([label, value, hint]) => [label, value, hint]) },
+    ...(chartItems.length ? [{ title: "Activity over time", columns: ["Date", "Sessions"], rows: chartItems.map((item) => [item.date, item.session_count]) }] : []),
+    ...(admin && report?.lot_usage?.length ? [{ title: "Usage by lot", columns: ["Parking lot", "Sessions"], rows: report.lot_usage.map((item) => [item.parking_lot, item.session_count]) }] : []),
+    ...(admin && report?.space_usage?.length ? [{ title: "Parking-space usage", columns: ["Space", "Sessions"], rows: report.space_usage.map((item) => [item.space, item.session_count]) }] : []),
+    { title: "Parking sessions", columns: columns.map((column) => column.label), rows: sessions.map((item) => [item.parking_lot, item.space_id, formatDate(item.recorded_start), formatDate(item.departure_time), `${Number(item.duration_hours || 0).toFixed(2)} hr`, money(item.recorded_fare)]) },
+  ];
   return <div className="page-stack">
-    <PageHeading eyebrow={admin ? "SYSTEM ANALYTICS" : "YOUR PARKING"} title={admin ? "Reports" : "My reports"} description={admin ? "Lot occupancy and session activity with recorded fares, not payments." : "Personal session summaries and recorded charges."} action={<button className="button button-outline" disabled={!sessions.length} onClick={() => exportCsv(admin ? "parking-report.csv" : "my-parking-report.csv", columns, csvRows)}>Export CSV</button>} />
+    <PageHeading eyebrow={admin ? "SYSTEM ANALYTICS" : "YOUR PARKING"} title={admin ? "Reports" : "My reports"} description={admin ? "Lot occupancy and session activity with recorded fares, not payments." : "Personal session summaries and recorded charges."} action={<button className="button button-outline" disabled={!report || loading} onClick={() => exportPdf(admin ? "parking-report.pdf" : "my-parking-report.pdf", admin ? "Parking report" : "My parking report", reportSections)}>Export PDF</button>} />
     <section className="panel"><FilterBar onSubmit={() => setApplied(filters)}>
       {lots.length > 0 && <label className="report-filter-field">Parking lot<select value={filters.lot_id} onChange={(event) => setFilters({ ...filters, lot_id: event.target.value })}><option value="">{admin ? "All lots" : "All lots"}</option>{lots.map((lot) => <option key={lot.lot_id} value={lot.lot_id}>{lot.name}</option>)}</select></label>}
       <DateFilters startDate={filters.start_date} endDate={filters.end_date} setStartDate={(value) => setFilters({ ...filters, start_date: value })} setEndDate={(value) => setFilters({ ...filters, end_date: value })} />
@@ -194,9 +241,9 @@ export function LoginActivityPage({ admin }) {
   useEffect(() => { load(); }, [load]);
   const columns = [{ label: "TIMESTAMP" }, ...(admin ? [{ label: "ACCOUNT" }, { label: "ACTOR" }] : []), { label: "RESULT" }, { label: "CLIENT IP" }, { label: "USER AGENT" }];
   const rows = result.items.map((item) => ({ key: item.event_id, cells: [formatDate(item.timestamp), ...(admin ? [item.account_email || "Unknown", item.actor_user_id ?? "—"] : []), <span className={`status-pill ${item.successful ? "vacant" : "occupied"}`}>{item.successful ? "Successful" : "Failed"}</span>, item.client_ip || "—", item.user_agent || "Not collected"] }));
-  const csvRows = result.items.map((item) => ({ values: [item.timestamp, ...(admin ? [item.account_email, item.actor_user_id] : []), item.successful ? "Successful" : "Failed", item.client_ip, item.user_agent] }));
+  const exportRows = result.items.map((item) => [formatDate(item.timestamp), ...(admin ? [item.account_email || "Unknown", item.actor_user_id ?? "—"] : []), item.successful ? "Successful" : "Failed", item.client_ip || "—", item.user_agent || "Not collected"]);
   return <div className="page-stack">
-    <PageHeading eyebrow="SECURITY" title={admin ? "Login activity" : "Your login activity"} description={admin ? "Login outcomes and client metadata collected by the API." : "Only sign-in activity associated with your own account is shown."} action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportCsv("login-activity.csv", columns, csvRows)}>Export CSV</button>} />
+    <PageHeading eyebrow="SECURITY" title={admin ? "Login activity" : "Your login activity"} description={admin ? "Login outcomes and client metadata collected by the API." : "Only sign-in activity associated with your own account is shown."} action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportPdf("login-activity.pdf", admin ? "Login activity" : "Your login activity", [{ title: "Login events", columns: columns.map((column) => column.label), rows: exportRows }])}>Export PDF</button>} />
     <section className="panel"><FilterBar onSubmit={() => setApplied(filters)}>
       {admin && <label className="report-filter-field">Account email<input type="search" value={filters.email} onChange={(event) => setFilters({ ...filters, email: event.target.value })} placeholder="Filter by email" /></label>}
       <DateFilters startDate={filters.start_date} endDate={filters.end_date} setStartDate={(value) => setFilters({ ...filters, start_date: value })} setEndDate={(value) => setFilters({ ...filters, end_date: value })} />
@@ -246,9 +293,9 @@ export function AdminActivityPage() {
   useEffect(() => { load(); }, [load]);
   const columns = [{ label: "TIME" }, { label: "EVENT" }, { label: "DESCRIPTION" }, { label: "ACTOR" }, { label: "RESULT" }, { label: "CLIENT" }];
   const rows = result.items.map((item) => ({ key: item.event_id, cells: [formatDate(item.timestamp), <span className="code-pill">{item.event_type}</span>, item.description, item.account_email || item.actor_user_id || "System", <span className={`status-pill ${item.successful ? "vacant" : "occupied"}`}>{item.successful ? "OK" : "Failed"}</span>, item.client_ip || "—"] }));
-  const csvRows = result.items.map((item) => ({ values: [item.timestamp, item.event_type, item.description, item.account_email || item.actor_user_id || "System", item.successful, item.client_ip] }));
+  const exportRows = result.items.map((item) => [formatDate(item.timestamp), item.event_type, item.description, item.account_email || item.actor_user_id || "System", item.successful ? "OK" : "Failed", item.client_ip || "—"]);
   return <div className="page-stack">
-    <PageHeading eyebrow="SYSTEM AUDIT" title="Activity logs" description="Events recorded by the application API. No server files are read by the browser." action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportCsv("parking-activity.csv", columns, csvRows)}>Export CSV</button>} />
+    <PageHeading eyebrow="SYSTEM AUDIT" title="Activity logs" description="Events recorded by the application API. No server files are read by the browser." action={<button className="button button-outline" disabled={!rows.length} onClick={() => exportPdf("parking-activity.pdf", "Activity logs", [{ title: "Application events", columns: columns.map((column) => column.label), rows: exportRows }])}>Export PDF</button>} />
     <section className="panel"><FilterBar onSubmit={() => setApplied(filters)}>
       <label className="report-filter-field">Event type<input value={filters.event_type} onChange={(event) => setFilters({ ...filters, event_type: event.target.value })} placeholder="e.g. parking.claim_confirmed" /></label>
       <DateFilters startDate={filters.start_date} endDate={filters.end_date} setStartDate={(value) => setFilters({ ...filters, start_date: value })} setEndDate={(value) => setFilters({ ...filters, end_date: value })} />
